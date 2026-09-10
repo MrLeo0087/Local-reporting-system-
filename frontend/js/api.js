@@ -2,7 +2,7 @@
   Shared API helper functions. Every frontend page includes this file.
   Change API_BASE_URL to point at your running backend.
 */
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = "https://local-reporting-system.onrender.com/";
 
 const CATEGORIES = [
   { value: "road", label: "Road" },
