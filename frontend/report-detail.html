@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Report Detail — Local Civic Problem Reporting System</title>
+<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="index.html"><span class="brand-icon">🏙️</span>Civic Problem Reporting</a>
+  <nav id="nav-links"></nav>
+</header>
+
+<main>
+  <p><a href="index.html">&larr; Back to public feed</a></p>
+  <div id="error-box" class="error-box"></div>
+  <div id="report-container">
+    <p class="empty-state">Loading report…</p>
+  </div>
+</main>
+
+<footer class="site-footer">
+  E-Governance Laboratory Project — Tribhuvan University
+</footer>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/map.js"></script>
+<script>
+  renderCitizenHeader("");
+
+  const errorEl = document.getElementById("error-box");
+  const container = document.getElementById("report-container");
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str || "";
+    return div.innerHTML;
+  }
+
+  function statusLogHtml(logs) {
+    if (!logs || logs.length === 0) return "<p>No status updates yet.</p>";
+    return `<div class="status-log">${logs
+      .map(
+        (l) => `
+        <div class="status-log-entry">
+          <div class="log-action">${statusLabel(l.action)}</div>
+          <div class="log-meta">${formatDate(l.created_at)}</div>
+          ${l.comment ? `<div>${escapeHtml(l.comment)}</div>` : ""}
+        </div>`
+      )
+      .join("")}</div>`;
+  }
+
+  async function loadReport() {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
+    if (!id) {
+      showBox(errorEl, "No report id given.");
+      container.innerHTML = "";
+      return;
+    }
+
+    try {
+      const r = await apiFetch(`/reports/${id}`);
+      const initial = (r.reporter_name || "?").trim().charAt(0).toUpperCase();
+      container.innerHTML = `
+        <div class="card" style="display:flex;align-items:center;gap:12px;">
+          <div class="avatar" style="width:48px;height:48px;font-size:1.2rem;">${initial}</div>
+          <div style="flex:1;">
+            <div class="post-author">${escapeHtml(r.reporter_name)}</div>
+            <div class="post-meta">${formatDate(r.created_at)}</div>
+          </div>
+          <span class="badge ${r.status}">${statusLabel(r.status)}</span>
+        </div>
+
+        <h1>${categoryLabel(r.category)} — Ward ${r.ward_no}</h1>
+        ${r.rejection_reason ? `<p><strong>Rejection reason:</strong> ${statusLabel(r.rejection_reason)}</p>` : ""}
+        ${r.expected_completion_date ? `<p><strong>Expected completion:</strong> ${r.expected_completion_date}</p>` : ""}
+
+        <div class="card report-photo">
+          <img src="${photoUrl(r.photo_path)}" alt="Photo of reported problem" />
+        </div>
+
+        <div class="card">
+          <p><strong>Landmark:</strong> ${escapeHtml(r.landmark)}</p>
+          <p><strong>Description:</strong> ${escapeHtml(r.description)}</p>
+          <p><strong>Reported by:</strong> ${escapeHtml(r.reporter_name)}</p>
+          <p><strong>Reported on:</strong> ${formatDate(r.created_at)}</p>
+          <p><strong>Last updated:</strong> ${formatDate(r.updated_at)}</p>
+          ${r.latitude != null && r.longitude != null ? `<div id="map"></div>` : ""}
+        </div>
+
+        <div class="card">
+          <h3>Status History</h3>
+          ${statusLogHtml(r.status_logs)}
+        </div>
+      `;
+
+      if (r.latitude != null && r.longitude != null) {
+        initViewMap("map", r.latitude, r.longitude, `${categoryLabel(r.category)} — Ward ${r.ward_no}`);
+      }
+    } catch (err) {
+      showBox(errorEl, err.message);
+      container.innerHTML = "";
+    }
+  }
+
+  loadReport();
+</script>
+</body>
+</html>

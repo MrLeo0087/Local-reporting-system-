@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin Dashboard — Local Civic Problem Reporting System</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="index.html"><span class="brand-icon">🏙️</span>Civic Problem Reporting</a>
+  <nav>
+    <a href="staff-dashboard.html">Staff Dashboard</a>
+    <a href="index.html">Public Feed</a>
+    <button id="logout-btn">Log out</button>
+  </nav>
+</header>
+
+<main class="wide">
+  <h1>Admin Dashboard</h1>
+  <p class="subtitle">Create staff accounts and review the existing staff roster.</p>
+
+  <div id="error-box" class="error-box"></div>
+  <div id="success-box" class="success-box"></div>
+
+  <div class="card">
+    <h3>Create a New Staff Account</h3>
+    <form id="staff-form">
+      <label for="full_name">Full name</label>
+      <input type="text" id="full_name" required maxlength="150" />
+
+      <label for="email">Email</label>
+      <input type="email" id="email" required maxlength="150" />
+
+      <label for="password">Temporary password</label>
+      <input type="password" id="password" required minlength="8" />
+
+      <label for="role">Role</label>
+      <select id="role">
+        <option value="staff">Staff</option>
+        <option value="admin">Admin</option>
+      </select>
+
+      <div id="staff-only-fields">
+        <label for="category">Category</label>
+        <select id="category"></select>
+
+        <label for="ward_no">Ward number</label>
+        <input type="number" id="ward_no" min="1" />
+      </div>
+
+      <button type="submit" class="btn">Create Staff Account</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>Existing Staff Accounts</h3>
+    <table class="data-table" id="staff-table">
+      <thead>
+        <tr><th>Name</th><th>Email</th><th>Role</th><th>Category</th><th>Ward</th><th>Created</th></tr>
+      </thead>
+      <tbody id="staff-table-body">
+        <tr><td colspan="6">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<footer class="site-footer">
+  E-Governance Laboratory Project — Tribhuvan University
+</footer>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  requireAdminLogin();
+
+  document.getElementById("logout-btn").addEventListener("click", () => {
+    clearToken("staff");
+    window.location.href = "staff-login.html";
+  });
+
+  const categorySelect = document.getElementById("category");
+  CATEGORIES.forEach((c) => {
+    const opt = document.createElement("option");
+    opt.value = c.value;
+    opt.textContent = c.label;
+    categorySelect.appendChild(opt);
+  });
+
+  const roleSelect = document.getElementById("role");
+  const staffOnlyFields = document.getElementById("staff-only-fields");
+  roleSelect.addEventListener("change", () => {
+    staffOnlyFields.style.display = roleSelect.value === "staff" ? "block" : "none";
+  });
+
+  const form = document.getElementById("staff-form");
+  const errorEl = document.getElementById("error-box");
+  const successEl = document.getElementById("success-box");
+  const tableBody = document.getElementById("staff-table-body");
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str || "";
+    return div.innerHTML;
+  }
+
+  async function loadStaff() {
+    try {
+      const staffList = await apiFetch("/admin/staff", { authKind: "staff" });
+      if (staffList.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="6">No staff accounts yet.</td></tr>`;
+        return;
+      }
+      tableBody.innerHTML = staffList
+        .map(
+          (s) => `
+        <tr>
+          <td>${escapeHtml(s.full_name)}</td>
+          <td>${escapeHtml(s.email)}</td>
+          <td>${s.role}</td>
+          <td>${s.category ? categoryLabel(s.category) : "—"}</td>
+          <td>${s.ward_no ?? "—"}</td>
+          <td>${formatDate(s.created_at)}</td>
+        </tr>`
+        )
+        .join("");
+    } catch (err) {
+      showBox(errorEl, err.message);
+    }
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    showBox(errorEl, "");
+    showBox(successEl, "");
+
+    const role = roleSelect.value;
+    const body = {
+      full_name: document.getElementById("full_name").value.trim(),
+      email: document.getElementById("email").value.trim(),
+      password: document.getElementById("password").value,
+      role,
+    };
+    if (role === "staff") {
+      body.category = categorySelect.value;
+      body.ward_no = Number(document.getElementById("ward_no").value);
+    }
+
+    try {
+      await apiFetch("/admin/staff", { method: "POST", body, authKind: "staff" });
+      showBox(successEl, "Staff account created.");
+      form.reset();
+      staffOnlyFields.style.display = "block";
+      loadStaff();
+    } catch (err) {
+      showBox(errorEl, err.message);
+    }
+  });
+
+  loadStaff();
+</script>
+</body>
+</html>

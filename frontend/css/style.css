@@ -1,0 +1,561 @@
+/* ============================================================
+   Civic Report — visual style
+   A Facebook-inspired look: light gray page background, white
+   rounded "cards" with soft shadows (no harsh borders), a blue
+   accent color, and a sticky top header.
+   ============================================================ */
+
+:root {
+  --blue: #1877f2;
+  --blue-dark: #0f5fcc;
+  --blue-soft: #e7f0ff;
+  --green: #31a24c;
+  --green-dark: #268a3d;
+  --red: #dc2626;
+  --red-dark: #b91c1c;
+  --orange: #d97706;
+  --orange-dark: #b45f04;
+  --gray-bg: #f0f2f5;
+  --gray-border: #dadde1;
+  --gray-fill: #e4e6eb;
+  --gray-fill-hover: #d8dade;
+  --text: #050505;
+  --text-muted: #65676b;
+  --white: #ffffff;
+  --radius: 8px;
+  --radius-sm: 6px;
+  --radius-lg: 12px;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.06);
+  --shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.1), 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--gray-bg);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+a {
+  color: var(--blue);
+}
+
+/* ---------- Header ---------- */
+
+header.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--white);
+  color: var(--text);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+header.site-header .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--blue);
+  text-decoration: none;
+  letter-spacing: -0.01em;
+}
+
+.brand-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), #4a9dff);
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+
+header.site-header nav {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+header.site-header nav a,
+header.site-header nav button {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.92rem;
+  font-weight: 600;
+  background: transparent;
+  border: none;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+header.site-header nav a:hover,
+header.site-header nav button:hover {
+  background: var(--gray-fill);
+  color: var(--text);
+}
+
+header.site-header nav a.active {
+  color: var(--blue);
+  background: var(--blue-soft);
+}
+
+/* ---------- Layout ---------- */
+
+main {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 24px 16px 60px;
+}
+
+main.wide {
+  max-width: 900px;
+}
+
+h1 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 4px;
+  letter-spacing: -0.01em;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 0.95rem;
+}
+
+.card {
+  background: var(--white);
+  border: none;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+}
+
+.form-card {
+  max-width: 420px;
+  margin: 24px auto;
+  padding: 28px 28px 24px;
+}
+
+.form-card h1 {
+  text-align: center;
+}
+
+.form-card > .subtitle {
+  text-align: center;
+}
+
+/* ---------- Forms ---------- */
+
+label {
+  display: block;
+  font-weight: 600;
+  margin: 14px 0 6px;
+  font-size: 0.88rem;
+  color: var(--text);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="number"],
+input[type="date"],
+input[type="file"],
+select,
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--gray-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  font-family: inherit;
+  background: var(--white);
+  color: var(--text);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--blue-soft);
+}
+
+textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.checkbox-row input {
+  width: auto;
+}
+
+.checkbox-row label {
+  margin: 0;
+  font-weight: 500;
+}
+
+/* ---------- Buttons ---------- */
+
+button.btn,
+a.btn {
+  display: inline-block;
+  background: var(--blue);
+  color: var(--white);
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  margin-top: 18px;
+  transition: background 0.15s, transform 0.05s;
+}
+
+button.btn:hover,
+a.btn:hover {
+  background: var(--blue-dark);
+}
+
+button.btn:active,
+a.btn:active {
+  transform: scale(0.98);
+}
+
+button.btn.secondary {
+  background: var(--gray-fill);
+  color: var(--text);
+}
+
+button.btn.secondary:hover {
+  background: var(--gray-fill-hover);
+}
+
+button.btn.small {
+  padding: 7px 14px;
+  font-size: 0.85rem;
+  margin-top: 0;
+}
+
+button.btn.reject {
+  background: var(--red);
+}
+button.btn.reject:hover {
+  background: var(--red-dark);
+}
+
+button.btn.verify {
+  background: var(--green);
+}
+button.btn.verify:hover {
+  background: var(--green-dark);
+}
+
+button.btn.progress {
+  background: var(--orange);
+}
+button.btn.progress:hover {
+  background: var(--orange-dark);
+}
+
+/* ---------- Alerts ---------- */
+
+.error-box {
+  background: #fdecea;
+  border: 1px solid #f5b5b0;
+  color: var(--red-dark);
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  margin: 14px 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: none;
+}
+
+.success-box {
+  background: #e7f6ec;
+  border: 1px solid #a8ddb8;
+  color: var(--green-dark);
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  margin: 14px 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: none;
+}
+
+/* ---------- Filters ---------- */
+
+.filters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.filters select {
+  width: auto;
+  background: var(--white);
+  border-radius: 999px;
+  padding: 9px 16px;
+  box-shadow: var(--shadow);
+  border-color: transparent;
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+/* ---------- Feed / report "post" cards ---------- */
+
+.report-list {
+  display: grid;
+  gap: 16px;
+}
+
+.report-card {
+  padding: 0;
+  overflow: hidden;
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+
+.report-card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-1px);
+}
+
+.post-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px 10px;
+}
+
+.avatar {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), #7db4ff);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.post-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.post-author {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.post-meta {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.report-card img,
+.report-photo img {
+  width: 100%;
+  height: 320px;
+  object-fit: cover;
+  display: block;
+  background: var(--gray-bg);
+}
+
+.report-photo img {
+  height: auto;
+  max-height: 420px;
+  border-radius: var(--radius-lg);
+}
+
+.report-card-body {
+  padding: 4px 16px 16px;
+}
+
+.report-card-body h3 {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+}
+
+.report-card-body h3 a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.report-card-body h3 a:hover {
+  color: var(--blue);
+  text-decoration: underline;
+}
+
+.meta-row {
+  color: var(--text-muted);
+  font-size: 0.87rem;
+  margin-bottom: 6px;
+}
+
+/* ---------- Status badges ---------- */
+
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: capitalize;
+  color: var(--white);
+  letter-spacing: 0.01em;
+}
+
+.badge.submitted { background: #8a8d91; }
+.badge.verified { background: var(--blue); }
+.badge.rejected { background: var(--red); }
+.badge.in_progress { background: var(--orange); }
+.badge.completed { background: var(--green); }
+
+/* ---------- Status history timeline ---------- */
+
+.status-log {
+  position: relative;
+  border-left: 2px solid var(--gray-border);
+  margin-left: 6px;
+  padding-left: 18px;
+}
+
+.status-log-entry {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.status-log-entry::before {
+  content: "";
+  position: absolute;
+  left: -24px;
+  top: 4px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--blue);
+  border: 2px solid var(--white);
+  box-shadow: 0 0 0 1px var(--gray-border);
+}
+
+.status-log-entry:last-child {
+  margin-bottom: 0;
+}
+
+.status-log-entry .log-action {
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.status-log-entry .log-meta {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+/* ---------- Tables (admin) ---------- */
+
+table.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table.data-table th,
+table.data-table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--gray-border);
+  font-size: 0.9rem;
+}
+
+table.data-table th {
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+table.data-table tbody tr:hover {
+  background: var(--gray-bg);
+}
+
+/* ---------- Misc ---------- */
+
+.actions-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 48px 20px;
+  font-size: 0.95rem;
+}
+
+#map {
+  height: 280px;
+  border-radius: var(--radius);
+  border: 1px solid var(--gray-border);
+  margin-top: 10px;
+}
+
+.helper-text {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.inline-form {
+  border-top: 1px solid var(--gray-border);
+  margin-top: 12px;
+  padding-top: 12px;
+  display: none;
+}
+
+footer.site-footer {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  padding: 24px 20px;
+}

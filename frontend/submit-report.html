@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Report a Problem — Local Civic Problem Reporting System</title>
+<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="index.html"><span class="brand-icon">🏙️</span>Civic Problem Reporting</a>
+  <nav id="nav-links"></nav>
+</header>
+
+<main>
+  <div class="card form-card" style="max-width:600px;">
+    <h1>Report a Problem</h1>
+    <p class="subtitle">Tell us what's wrong and where — a photo helps staff verify it faster.</p>
+
+    <div id="error-box" class="error-box"></div>
+    <div id="success-box" class="success-box"></div>
+
+    <form id="report-form">
+      <label for="category">Category</label>
+      <select id="category" required></select>
+
+      <label for="ward_no">Ward number</label>
+      <input type="number" id="ward_no" min="1" required />
+
+      <label for="landmark">Nearby landmark</label>
+      <input type="text" id="landmark" maxlength="200" required placeholder="e.g. Near City Hospital gate" />
+
+      <label for="description">Description</label>
+      <textarea id="description" required placeholder="Describe the problem in detail"></textarea>
+
+      <label for="photo">Photo (JPG or PNG, max 5MB)</label>
+      <input type="file" id="photo" accept=".jpg,.jpeg,.png" required />
+
+      <label>Pin the location on the map (optional)</label>
+      <div id="map"></div>
+      <p class="helper-text" id="coords-label">No location pinned yet — click the map to add one.</p>
+
+      <div class="checkbox-row">
+        <input type="checkbox" id="display_publicly" checked />
+        <label for="display_publicly">Show my name publicly on this report (otherwise it shows as "Anonymous Citizen")</label>
+      </div>
+
+      <button type="submit" class="btn">Submit Report</button>
+    </form>
+  </div>
+</main>
+
+<footer class="site-footer">
+  E-Governance Laboratory Project — Tribhuvan University
+</footer>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/map.js"></script>
+<script>
+  requireCitizenLogin();
+  renderCitizenHeader("submit-report.html");
+
+  const categorySelect = document.getElementById("category");
+  CATEGORIES.forEach((c) => {
+    const opt = document.createElement("option");
+    opt.value = c.value;
+    opt.textContent = c.label;
+    categorySelect.appendChild(opt);
+  });
+
+  let pickedLat = null;
+  let pickedLng = null;
+  const coordsLabel = document.getElementById("coords-label");
+
+  initPickerMap("map", (lat, lng) => {
+    pickedLat = lat;
+    pickedLng = lng;
+    coordsLabel.textContent = `Pinned at ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+  });
+
+  const form = document.getElementById("report-form");
+  const errorEl = document.getElementById("error-box");
+  const successEl = document.getElementById("success-box");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    showBox(errorEl, "");
+    showBox(successEl, "");
+
+    const photoInput = document.getElementById("photo");
+    if (!photoInput.files[0]) {
+      showBox(errorEl, "Please choose a photo.");
+      return;
+    }
+
+    const fd = new FormData();
+    fd.append("category", categorySelect.value);
+    fd.append("ward_no", document.getElementById("ward_no").value);
+    fd.append("landmark", document.getElementById("landmark").value.trim());
+    fd.append("description", document.getElementById("description").value.trim());
+    fd.append("display_publicly", document.getElementById("display_publicly").checked);
+    if (pickedLat != null) fd.append("latitude", pickedLat);
+    if (pickedLng != null) fd.append("longitude", pickedLng);
+    fd.append("photo", photoInput.files[0]);
+
+    try {
+      await apiFetch("/reports", {
+        method: "POST",
+        body: fd,
+        isFormData: true,
+        authKind: "citizen",
+      });
+      showBox(successEl, "Report submitted! Redirecting to your reports…");
+      setTimeout(() => (window.location.href = "my-reports.html"), 1200);
+    } catch (err) {
+      showBox(errorEl, err.message);
+    }
+  });
+</script>
+</body>
+</html>

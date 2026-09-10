@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Staff Login — Local Civic Problem Reporting System</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="index.html"><span class="brand-icon">🏙️</span>Civic Problem Reporting</a>
+  <nav id="nav-links"></nav>
+</header>
+
+<main>
+  <div class="card form-card">
+    <h1>Staff / Admin Login</h1>
+    <p class="subtitle">For government staff reviewing and resolving reports.</p>
+
+    <div id="error-box" class="error-box"></div>
+
+    <form id="login-form">
+      <label for="email">Email</label>
+      <input type="email" id="email" required />
+
+      <label for="password">Password</label>
+      <input type="password" id="password" required />
+
+      <button type="submit" class="btn">Log In</button>
+    </form>
+
+    <p style="margin-top:16px;"><a href="login.html">Citizen login</a></p>
+    <p class="helper-text">Staff and admin accounts are created by an administrator — there is no self-registration.</p>
+  </div>
+</main>
+
+<footer class="site-footer">
+  E-Governance Laboratory Project — Tribhuvan University
+</footer>
+
+<script src="js/api.js"></script>
+<script>
+  const form = document.getElementById("login-form");
+  const errorEl = document.getElementById("error-box");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    showBox(errorEl, "");
+
+    try {
+      const data = await apiFetch("/staff/login", {
+        method: "POST",
+        body: {
+          email: document.getElementById("email").value.trim(),
+          password: document.getElementById("password").value,
+        },
+      });
+      setToken("staff", data.access_token, data.role);
+      window.location.href = data.role === "admin" ? "admin-dashboard.html" : "staff-dashboard.html";
+    } catch (err) {
+      showBox(errorEl, err.message);
+    }
+  });
+</script>
+</body>
+</html>

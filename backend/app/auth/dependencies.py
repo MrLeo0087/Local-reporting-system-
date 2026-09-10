@@ -1,0 +1,79 @@
+"""
+Reusable FastAPI dependencies for protecting routes:
+- get_current_citizen
+- get_current_staff   (any staff member, including admins)
+- require_admin       (admins only)
+"""
+import uuid
+
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.auth.security import decode_access_token
+from app.models.citizen import Citizen
+from app.models.staff import Staff
+
+# tokenUrl is only used to populate the "Authorize" button in /docs
+citizen_oauth2_scheme = OAuth2PasswordBearer(tokenUrl="citizens/login", auto_error=False)
+staff_oauth2_scheme = OAuth2PasswordBearer(tokenUrl="staff/login", auto_error=False)
+
+CREDENTIALS_EXCEPTION = HTTPException(
+    status_code=status.HTTP_401_UNAUTHORIZED,
+    detail="Could not validate credentials",
+    headers={"WWW-Authenticate": "Bearer"},
+)
+
+
+def get_current_citizen(
+    token: str = Depends(citizen_oauth2_scheme), db: Session = Depends(get_db)
+) -> Citizen:
+    if not token:
+        raise CREDENTIALS_EXCEPTION
+    payload = decode_access_token(token)
+    if not payload or payload.get("role") != "citizen":
+        raise CREDENTIALS_EXCEPTION
+
+    try:
+        citizen_id = uuid.UUID(payload.get("sub"))
+    except (TypeError, ValueError):
+        raise CREDENTIALS_EXCEPTION
+
+    citizen = db.query(Citizen).filter(Citizen.id == citizen_id).first()
+    if citizen is None:
+        raise CREDENTIALS_EXCEPTION
+    if citizen.disabled:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="This account has been disabled."
+        )
+    return citizen
+
+
+def get_current_staff(
+    token: str = Depends(staff_oauth2_scheme), db: Session = Depends(get_db)
+) -> Staff:
+    if not token:
+        raise CREDENTIALS_EXCEPTION
+    payload = decode_access_token(token)
+    if not payload or payload.get("role") not in ("staff", "admin"):
+        raise CREDENTIALS_EXCEPTION
+
+    try:
+        staff_id = uuid.UUID(payload.get("sub"))
+    except (TypeError, ValueError):
+        raise CREDENTIALS_EXCEPTION
+
+    staff = db.query(Staff).filter(Staff.id == staff_id).first()
+    if staff is None:
+        raise CREDENTIALS_EXCEPTION
+    return staff
+
+
+def require_admin(staff: Staff = Depends(get_current_staff)) -> Staff:
+    if staff.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This action requires an admin account.",
+        )
+    return staff

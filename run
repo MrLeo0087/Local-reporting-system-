@@ -1,0 +1,22 @@
+Quick version — two terminals:
+
+1. Backend (API)
+
+
+cd /media/leo/Project1/clz_project/civic-report/backend
+source venv/bin/activate
+uvicorn app.main:app --reload --port 8000
+The venv already has everything installed (I rebuilt it and added the missing email-validator fix while testing), so this should just start — no pip install needed. It connects to your real Neon Postgres DB (from .env), so you'll see your actual existing reports.
+
+2. Frontend (static site)
+
+
+cd /media/leo/Project1/clz_project/civic-report/frontend
+python3 -m http.server 5500
+Then open http://localhost:5500/index.html in your browser.
+
+That's it — the public feed should load with the new card design. To try the citizen/staff flows:
+
+Citizen: login.html / register.html
+Staff/Admin: staff-login.html (accounts are created via create_first_admin.py for the first admin, then via the Admin Dashboard for everyone else)
+One note: your local uploads/ folder is empty, so existing reports' photos will show as broken images until you submit a new report locally (which does save a real file there) — that's a pre-existing data thing, not related to the redesign.

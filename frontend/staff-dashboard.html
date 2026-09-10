@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Staff Dashboard — Local Civic Problem Reporting System</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="index.html"><span class="brand-icon">🏙️</span>Civic Problem Reporting</a>
+  <nav>
+    <a href="index.html">Public Feed</a>
+    <a href="admin-dashboard.html" id="admin-link" style="display:none;">Admin Dashboard</a>
+    <button id="logout-btn">Log out</button>
+  </nav>
+</header>
+
+<main class="wide">
+  <h1>Staff Dashboard</h1>
+  <p class="subtitle" id="scope-label"></p>
+
+  <div id="error-box" class="error-box"></div>
+  <div id="success-box" class="success-box"></div>
+
+  <div id="report-list" class="report-list">
+    <p class="empty-state">Loading reports…</p>
+  </div>
+</main>
+
+<footer class="site-footer">
+  E-Governance Laboratory Project — Tribhuvan University
+</footer>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  requireStaffLogin();
+
+  document.getElementById("logout-btn").addEventListener("click", () => {
+    clearToken("staff");
+    window.location.href = "staff-login.html";
+  });
+
+  const role = localStorage.getItem("staff_role");
+  if (role === "admin") {
+    document.getElementById("admin-link").style.display = "inline-block";
+    document.getElementById("scope-label").textContent = "Admin view — all reports across every category and ward.";
+  } else {
+    document.getElementById("scope-label").textContent = "Showing reports in your assigned category and ward.";
+  }
+
+  const listEl = document.getElementById("report-list");
+  const errorEl = document.getElementById("error-box");
+  const successEl = document.getElementById("success-box");
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str || "";
+    return div.innerHTML;
+  }
+
+  function initials(name) {
+    return (name || "?").trim().charAt(0).toUpperCase();
+  }
+
+  function reportRowHtml(r) {
+    const canAct = r.status !== "completed" && r.status !== "rejected";
+    return `
+      <div class="card report-card" data-id="${r.id}">
+        <div class="post-header">
+          <div class="avatar">${initials(r.reporter_name)}</div>
+          <div class="post-header-text">
+            <div class="post-author">${escapeHtml(r.reporter_name)}</div>
+            <div class="post-meta">${escapeHtml(r.citizen_email)} • ${escapeHtml(r.citizen_phone)}</div>
+          </div>
+          <span class="badge ${r.status}">${statusLabel(r.status)}</span>
+        </div>
+        <a href="report-detail.html?id=${r.id}" target="_blank">
+          <img src="${photoUrl(r.photo_path)}" alt="Photo of reported problem" />
+        </a>
+        <div class="report-card-body">
+          <h3>${categoryLabel(r.category)} — Ward ${r.ward_no}</h3>
+          <div class="meta-row">
+            📍 Near ${escapeHtml(r.landmark)} • ${formatDate(r.created_at)}
+          </div>
+          <p>${escapeHtml(r.description)}</p>
+          ${r.rejection_reason ? `<span class="meta-row"> Reason: ${statusLabel(r.rejection_reason)}</span>` : ""}
+          ${r.expected_completion_date ? `<div class="meta-row">Expected completion: ${r.expected_completion_date}</div>` : ""}
+
+          ${canAct ? `
+          <div class="actions-row">
+            ${r.status === "submitted" ? `<button class="btn small verify" data-action="verify">Verify</button>` : ""}
+            ${r.status !== "rejected" ? `<button class="btn small reject" data-action="reject">Reject</button>` : ""}
+            ${r.status === "verified" || r.status === "in_progress" ? `<button class="btn small progress" data-action="progress">${r.status === "in_progress" ? "Update Progress" : "Mark In Progress"}</button>` : ""}
+            ${r.status === "in_progress" ? `<button class="btn small" data-action="complete">Mark Completed</button>` : ""}
+          </div>
+
+          <div class="inline-form" data-form="reject">
+            <label>Rejection reason</label>
+            <select data-field="reason"></select>
+            <label>Comment (optional)</label>
+            <textarea data-field="comment"></textarea>
+            <button class="btn small reject" data-submit="reject">Confirm Reject</button>
+          </div>
+
+          <div class="inline-form" data-form="progress">
+            <label>Expected completion date</label>
+            <input type="date" data-field="expected_completion_date" />
+            <label>Comment (optional)</label>
+            <textarea data-field="comment"></textarea>
+            <button class="btn small progress" data-submit="progress">Confirm</button>
+          </div>
+          ` : ""}
+        </div>
+      </div>
+    `;
+  }
+
+  async function loadReports() {
+    try {
+      const reports = await apiFetch("/staff/reports", { authKind: "staff" });
+      if (reports.length === 0) {
+        listEl.innerHTML = `<p class="empty-state">No reports in your queue right now.</p>`;
+        return;
+      }
+      listEl.innerHTML = reports.map(reportRowHtml).join("");
+      wireUpCards();
+    } catch (err) {
+      showBox(errorEl, err.message);
+      listEl.innerHTML = "";
+    }
+  }
+
+  function wireUpCards() {
+    document.querySelectorAll(".report-card").forEach((card) => {
+      const id = card.dataset.id;
+
+      const rejectSelect = card.querySelector('[data-form="reject"] select[data-field="reason"]');
+      if (rejectSelect) {
+        REJECTION_REASONS.forEach((r) => {
+          const opt = document.createElement("option");
+          opt.value = r.value;
+          opt.textContent = r.label;
+          rejectSelect.appendChild(opt);
+        });
+      }
+
+      card.querySelectorAll("[data-action]").forEach((btn) => {
+        btn.addEventListener("click", () => onActionClick(card, btn.dataset.action, id));
+      });
+
+      const rejectSubmit = card.querySelector('[data-submit="reject"]');
+      if (rejectSubmit) {
+        rejectSubmit.addEventListener("click", () => submitReject(card, id));
+      }
+      const progressSubmit = card.querySelector('[data-submit="progress"]');
+      if (progressSubmit) {
+        progressSubmit.addEventListener("click", () => submitProgress(card, id));
+      }
+    });
+  }
+
+  function onActionClick(card, action, id) {
+    if (action === "verify") return doAction(id, "verify");
+    if (action === "complete") return doAction(id, "complete");
+    if (action === "reject") {
+      const form = card.querySelector('[data-form="reject"]');
+      form.style.display = form.style.display === "block" ? "none" : "block";
+    }
+    if (action === "progress") {
+      const form = card.querySelector('[data-form="progress"]');
+      form.style.display = form.style.display === "block" ? "none" : "block";
+    }
+  }
+
+  async function doAction(id, action, body = {}) {
+    showBox(errorEl, "");
+    showBox(successEl, "");
+    try {
+      await apiFetch(`/staff/reports/${id}/${action}`, {
+        method: "PATCH",
+        body,
+        authKind: "staff",
+      });
+      showBox(successEl, `Report ${statusLabel(action)} successfully.`);
+      loadReports();
+    } catch (err) {
+      showBox(errorEl, err.message);
+    }
+  }
+
+  function submitReject(card, id) {
+    const reason = card.querySelector('[data-form="reject"] [data-field="reason"]').value;
+    const comment = card.querySelector('[data-form="reject"] [data-field="comment"]').value.trim();
+    if (!reason) {
+      showBox(errorEl, "Please choose a rejection reason.");
+      return;
+    }
+    doAction(id, "reject", { reason, comment: comment || null });
+  }
+
+  function submitProgress(card, id) {
+    const date = card.querySelector('[data-form="progress"] [data-field="expected_completion_date"]').value;
+    const comment = card.querySelector('[data-form="progress"] [data-field="comment"]').value.trim();
+    if (!date) {
+      showBox(errorEl, "Please choose an expected completion date.");
+      return;
+    }
+    doAction(id, "progress", { expected_completion_date: date, comment: comment || null });
+  }
+
+  loadReports();
+</script>
+</body>
+</html>
