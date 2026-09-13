@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Report a Problem — Local Civic Problem Reporting System</title>
-<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/style.css?v=2" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
@@ -56,10 +56,10 @@
   E-Governance Laboratory Project — Tribhuvan University
 </footer>
 
-<script src="js/api.js"></script>
-<script src="js/auth.js"></script>
+<script src="js/api.js?v=2"></script>
+<script src="js/auth.js?v=2"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="js/map.js"></script>
+<script src="js/map.js?v=2"></script>
 <script>
   requireCitizenLogin();
   renderCitizenHeader("submit-report.html");
@@ -107,6 +107,9 @@
     if (pickedLng != null) fd.append("longitude", pickedLng);
     fd.append("photo", photoInput.files[0]);
 
+    const submitBtn = form.querySelector('button[type="submit"]');
+    setButtonLoading(submitBtn, true);
+
     try {
       await apiFetch("/reports", {
         method: "POST",
@@ -118,6 +121,7 @@
       setTimeout(() => (window.location.href = "my-reports.html"), 1200);
     } catch (err) {
       showBox(errorEl, err.message);
+      setButtonLoading(submitBtn, false);
     }
   });
 </script>

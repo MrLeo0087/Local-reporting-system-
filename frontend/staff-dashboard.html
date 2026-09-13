@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Staff Dashboard — Local Civic Problem Reporting System</title>
-<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/style.css?v=2" />
 </head>
 <body>
 
@@ -24,17 +24,15 @@
   <div id="error-box" class="error-box"></div>
   <div id="success-box" class="success-box"></div>
 
-  <div id="report-list" class="report-list">
-    <p class="empty-state">Loading reports…</p>
-  </div>
+  <div id="report-list" class="report-list"></div>
 </main>
 
 <footer class="site-footer">
   E-Governance Laboratory Project — Tribhuvan University
 </footer>
 
-<script src="js/api.js"></script>
-<script src="js/auth.js"></script>
+<script src="js/api.js?v=2"></script>
+<script src="js/auth.js?v=2"></script>
 <script>
   requireStaffLogin();
 
@@ -119,6 +117,7 @@
   }
 
   async function loadReports() {
+    listEl.innerHTML = spinnerHtml();
     try {
       const reports = await apiFetch("/staff/reports", { authKind: "staff" });
       if (reports.length === 0) {
@@ -148,23 +147,23 @@
       }
 
       card.querySelectorAll("[data-action]").forEach((btn) => {
-        btn.addEventListener("click", () => onActionClick(card, btn.dataset.action, id));
+        btn.addEventListener("click", () => onActionClick(card, btn.dataset.action, id, btn));
       });
 
       const rejectSubmit = card.querySelector('[data-submit="reject"]');
       if (rejectSubmit) {
-        rejectSubmit.addEventListener("click", () => submitReject(card, id));
+        rejectSubmit.addEventListener("click", () => submitReject(card, id, rejectSubmit));
       }
       const progressSubmit = card.querySelector('[data-submit="progress"]');
       if (progressSubmit) {
-        progressSubmit.addEventListener("click", () => submitProgress(card, id));
+        progressSubmit.addEventListener("click", () => submitProgress(card, id, progressSubmit));
       }
     });
   }
 
-  function onActionClick(card, action, id) {
-    if (action === "verify") return doAction(id, "verify");
-    if (action === "complete") return doAction(id, "complete");
+  function onActionClick(card, action, id, btn) {
+    if (action === "verify") return doAction(id, "verify", {}, btn);
+    if (action === "complete") return doAction(id, "complete", {}, btn);
     if (action === "reject") {
       const form = card.querySelector('[data-form="reject"]');
       form.style.display = form.style.display === "block" ? "none" : "block";
@@ -175,9 +174,10 @@
     }
   }
 
-  async function doAction(id, action, body = {}) {
+  async function doAction(id, action, body = {}, btn = null) {
     showBox(errorEl, "");
     showBox(successEl, "");
+    setButtonLoading(btn, true);
     try {
       await apiFetch(`/staff/reports/${id}/${action}`, {
         method: "PATCH",
@@ -188,27 +188,28 @@
       loadReports();
     } catch (err) {
       showBox(errorEl, err.message);
+      setButtonLoading(btn, false);
     }
   }
 
-  function submitReject(card, id) {
+  function submitReject(card, id, btn) {
     const reason = card.querySelector('[data-form="reject"] [data-field="reason"]').value;
     const comment = card.querySelector('[data-form="reject"] [data-field="comment"]').value.trim();
     if (!reason) {
       showBox(errorEl, "Please choose a rejection reason.");
       return;
     }
-    doAction(id, "reject", { reason, comment: comment || null });
+    doAction(id, "reject", { reason, comment: comment || null }, btn);
   }
 
-  function submitProgress(card, id) {
+  function submitProgress(card, id, btn) {
     const date = card.querySelector('[data-form="progress"] [data-field="expected_completion_date"]').value;
     const comment = card.querySelector('[data-form="progress"] [data-field="comment"]').value.trim();
     if (!date) {
       showBox(errorEl, "Please choose an expected completion date.");
       return;
     }
-    doAction(id, "progress", { expected_completion_date: date, comment: comment || null });
+    doAction(id, "progress", { expected_completion_date: date, comment: comment || null }, btn);
   }
 
   loadReports();

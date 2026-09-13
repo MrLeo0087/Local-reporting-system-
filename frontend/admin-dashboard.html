@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Admin Dashboard — Local Civic Problem Reporting System</title>
-<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/style.css?v=2" />
 </head>
 <body>
 
@@ -34,7 +34,10 @@
       <input type="email" id="email" required maxlength="150" />
 
       <label for="password">Temporary password</label>
-      <input type="password" id="password" required minlength="8" />
+      <div class="password-field">
+        <input type="password" id="password" required minlength="8" />
+        <button type="button" class="password-toggle" data-target="password" aria-label="Show password">👁</button>
+      </div>
 
       <label for="role">Role</label>
       <select id="role">
@@ -61,7 +64,7 @@
         <tr><th>Name</th><th>Email</th><th>Role</th><th>Category</th><th>Ward</th><th>Created</th></tr>
       </thead>
       <tbody id="staff-table-body">
-        <tr><td colspan="6">Loading…</td></tr>
+        <tr><td colspan="6"><div class="spinner-center" style="padding:16px 0;"><div class="spinner"></div></div></td></tr>
       </tbody>
     </table>
   </div>
@@ -71,8 +74,8 @@
   E-Governance Laboratory Project — Tribhuvan University
 </footer>
 
-<script src="js/api.js"></script>
-<script src="js/auth.js"></script>
+<script src="js/api.js?v=2"></script>
+<script src="js/auth.js?v=2"></script>
 <script>
   requireAdminLogin();
 
@@ -148,6 +151,9 @@
       body.ward_no = Number(document.getElementById("ward_no").value);
     }
 
+    const submitBtn = form.querySelector('button[type="submit"]');
+    setButtonLoading(submitBtn, true);
+
     try {
       await apiFetch("/admin/staff", { method: "POST", body, authKind: "staff" });
       showBox(successEl, "Staff account created.");
@@ -156,6 +162,8 @@
       loadStaff();
     } catch (err) {
       showBox(errorEl, err.message);
+    } finally {
+      setButtonLoading(submitBtn, false);
     }
   });
 

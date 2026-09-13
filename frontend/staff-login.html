@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Staff Login — Local Civic Problem Reporting System</title>
-<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/style.css?v=2" />
 </head>
 <body>
 
@@ -25,7 +25,10 @@
       <input type="email" id="email" required />
 
       <label for="password">Password</label>
-      <input type="password" id="password" required />
+      <div class="password-field">
+        <input type="password" id="password" required />
+        <button type="button" class="password-toggle" data-target="password" aria-label="Show password">👁</button>
+      </div>
 
       <button type="submit" class="btn">Log In</button>
     </form>
@@ -39,7 +42,7 @@
   E-Governance Laboratory Project — Tribhuvan University
 </footer>
 
-<script src="js/api.js"></script>
+<script src="js/api.js?v=2"></script>
 <script>
   const form = document.getElementById("login-form");
   const errorEl = document.getElementById("error-box");
@@ -47,6 +50,8 @@
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     showBox(errorEl, "");
+    const submitBtn = form.querySelector('button[type="submit"]');
+    setButtonLoading(submitBtn, true);
 
     try {
       const data = await apiFetch("/staff/login", {
@@ -60,6 +65,7 @@
       window.location.href = data.role === "admin" ? "admin-dashboard.html" : "staff-dashboard.html";
     } catch (err) {
       showBox(errorEl, err.message);
+      setButtonLoading(submitBtn, false);
     }
   });
 </script>

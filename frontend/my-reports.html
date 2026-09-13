@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>My Reports — Local Civic Problem Reporting System</title>
-<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/style.css?v=2" />
 </head>
 <body>
 
@@ -20,17 +20,15 @@
   <p><a class="btn small secondary" href="submit-report.html">+ Report a New Problem</a></p>
 
   <div id="error-box" class="error-box"></div>
-  <div id="report-list" class="report-list">
-    <p class="empty-state">Loading your reports…</p>
-  </div>
+  <div id="report-list" class="report-list"></div>
 </main>
 
 <footer class="site-footer">
   E-Governance Laboratory Project — Tribhuvan University
 </footer>
 
-<script src="js/api.js"></script>
-<script src="js/auth.js"></script>
+<script src="js/api.js?v=2"></script>
+<script src="js/auth.js?v=2"></script>
 <script>
   requireCitizenLogin();
   renderCitizenHeader("my-reports.html");
@@ -73,6 +71,7 @@
   }
 
   async function loadReports() {
+    listEl.innerHTML = spinnerHtml();
     try {
       const reports = await apiFetch("/reports/mine", { authKind: "citizen" });
       if (reports.length === 0) {
