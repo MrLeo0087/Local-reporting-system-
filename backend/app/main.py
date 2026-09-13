@@ -5,6 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
+from app.database import Base, engine
+from app.models import citizen, staff as staff_model, report, status_log  # noqa: F401
 from app.routers import citizens, reports, staff, admin
 
 app = FastAPI(
@@ -30,6 +32,15 @@ app.include_router(citizens.router)
 app.include_router(reports.router)
 app.include_router(staff.router)
 app.include_router(admin.router)
+
+
+@app.on_event("startup")
+def create_tables_if_missing():
+    # Safe to run every time: create_all() only creates tables that don't
+    # already exist yet. This means a fresh deploy (e.g. on Render, where
+    # you can't easily run `python -m app.database` by hand) sets itself
+    # up automatically on first boot.
+    Base.metadata.create_all(bind=engine)
 
 
 @app.get("/")
