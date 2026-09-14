@@ -8,8 +8,8 @@
   used on the report detail page when a report has GPS coordinates.
 */
 
-const DEFAULT_CENTER = [27.7, 85.3]; // Kathmandu Valley, Nepal — reasonable default
-const DEFAULT_ZOOM = 12;
+const DEFAULT_CENTER = [28.05, 81.6167]; // Nepalgunj, Nepal
+const DEFAULT_ZOOM = 13;
 
 function initPickerMap(elementId, onPick) {
   const map = L.map(elementId).setView(DEFAULT_CENTER, DEFAULT_ZOOM);

@@ -48,10 +48,21 @@ function requireCitizenLogin() {
   return token;
 }
 
-function requireStaffLogin() {
+/**
+ * For the staff dashboard: requires a logged-in staff token, AND blocks
+ * admins from it — reviewing/resolving complaints is department staff's
+ * job, admins only manage staff accounts (see admin-dashboard.html).
+ */
+function requireStaffOnlyLogin() {
   const token = getToken("staff");
+  const role = localStorage.getItem("staff_role");
   if (!token) {
     window.location.href = "staff-login.html";
+    return null;
+  }
+  if (role === "admin") {
+    window.location.href = "admin-dashboard.html";
+    return null;
   }
   return token;
 }
