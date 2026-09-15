@@ -1,8 +1,11 @@
 """
-Helper for saving an uploaded report photo to disk.
+Helper for processing an uploaded report photo.
 
-Keeps things simple: validate extension + size, generate a unique filename,
-write the bytes, return the relative path to store in the DB.
+Keeps things simple: validate extension + size, shrink/compress it, and
+return the final bytes + content type + a filename (for record-keeping).
+The bytes go straight into the database (see models/report.py) rather than
+onto local disk — Render's free-tier disk is wiped on every restart, so
+anything written there doesn't survive.
 """
 import io
 import os
@@ -19,7 +22,8 @@ ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png"}
 
 
-def save_report_photo(photo: UploadFile) -> str:
+def process_report_photo(photo: UploadFile) -> tuple[bytes, str, str]:
+    """Returns (image_bytes, content_type, filename)."""
     _, ext = os.path.splitext(photo.filename or "")
     ext = ext.lower()
 
@@ -37,23 +41,24 @@ def save_report_photo(photo: UploadFile) -> str:
             detail=f"Photo is too large. Maximum size is {settings.max_upload_mb}MB.",
         )
 
-    os.makedirs(settings.upload_dir, exist_ok=True)
     filename = f"{uuid.uuid4().hex}{ext}"
-    file_path = os.path.join(settings.upload_dir, filename)
+    content_type = "image/jpeg" if ext in (".jpg", ".jpeg") else "image/png"
 
     # Best-effort compression: shrink oversized images and re-encode with
     # moderate quality. If anything goes wrong (unusual file, etc.) fall back
-    # to saving the original bytes untouched rather than failing the upload.
+    # to the original bytes untouched rather than failing the upload.
     try:
         image = Image.open(io.BytesIO(contents))
         image.thumbnail((MAX_DIMENSION, MAX_DIMENSION))
-        save_kwargs = {"quality": 85, "optimize": True} if ext in (".jpg", ".jpeg") else {}
-        if ext in (".jpg", ".jpeg") and image.mode != "RGB":
-            image = image.convert("RGB")
-        image.save(file_path, **save_kwargs)
+        buffer = io.BytesIO()
+        if ext in (".jpg", ".jpeg"):
+            if image.mode != "RGB":
+                image = image.convert("RGB")
+            image.save(buffer, format="JPEG", quality=85, optimize=True)
+        else:
+            image.save(buffer, format="PNG")
+        processed = buffer.getvalue()
     except Exception:
-        with open(file_path, "wb") as f:
-            f.write(contents)
+        processed = contents
 
-    # Path stored in the DB / returned to the frontend, servable at /uploads/<filename>
-    return f"/uploads/{filename}"
+    return processed, content_type, filename

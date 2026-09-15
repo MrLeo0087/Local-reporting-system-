@@ -9,7 +9,7 @@
 <body>
 
 <header class="site-header">
-  <a class="brand" href="index.html"><span class="brand-icon">🏙️</span>Civic Problem Reporting</a>
+  <a class="brand" href="login.html"><span class="brand-icon">🏙️</span>Civic Problem Reporting</a>
   <nav id="nav-links"></nav>
 </header>
 
@@ -43,31 +43,34 @@
 </footer>
 
 <script src="js/api.js?v=2"></script>
+<script src="js/auth.js?v=7"></script>
 <script>
-  const form = document.getElementById("login-form");
-  const errorEl = document.getElementById("error-box");
+  if (!redirectIfAlreadyLoggedInAsStaff()) {
+    const form = document.getElementById("login-form");
+    const errorEl = document.getElementById("error-box");
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    showBox(errorEl, "");
-    const submitBtn = form.querySelector('button[type="submit"]');
-    setButtonLoading(submitBtn, true);
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      showBox(errorEl, "");
+      const submitBtn = form.querySelector('button[type="submit"]');
+      setButtonLoading(submitBtn, true);
 
-    try {
-      const data = await apiFetch("/staff/login", {
-        method: "POST",
-        body: {
-          email: document.getElementById("email").value.trim(),
-          password: document.getElementById("password").value,
-        },
-      });
-      setToken("staff", data.access_token, data.role);
-      window.location.href = data.role === "admin" ? "admin-dashboard.html" : "staff-dashboard.html";
-    } catch (err) {
-      showBox(errorEl, err.message);
-      setButtonLoading(submitBtn, false);
-    }
-  });
+      try {
+        const data = await apiFetch("/staff/login", {
+          method: "POST",
+          body: {
+            email: document.getElementById("email").value.trim(),
+            password: document.getElementById("password").value,
+          },
+        });
+        setToken("staff", data.access_token, data.role);
+        window.location.href = data.role === "admin" ? "admin-dashboard.html" : "staff-dashboard.html";
+      } catch (err) {
+        showBox(errorEl, err.message);
+        setButtonLoading(submitBtn, false);
+      }
+    });
+  }
 </script>
 </body>
 </html>

@@ -4,6 +4,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from sqlalchemy import text
+
 from app.config import settings
 from app.database import Base, engine
 from app.models import citizen, staff as staff_model, report, status_log  # noqa: F401
@@ -41,6 +43,18 @@ def create_tables_if_missing():
     # you can't easily run `python -m app.database` by hand) sets itself
     # up automatically on first boot.
     Base.metadata.create_all(bind=engine)
+
+    # create_all() never alters an EXISTING table, so columns added to a
+    # model after the table already exists (like these) need an explicit,
+    # idempotent migration — also run automatically since there's no shell
+    # access on Render's free tier to run one by hand.
+    with engine.begin() as conn:
+        conn.execute(text(
+            "ALTER TABLE reports ADD COLUMN IF NOT EXISTS photo_data BYTEA"
+        ))
+        conn.execute(text(
+            "ALTER TABLE reports ADD COLUMN IF NOT EXISTS photo_content_type VARCHAR(50)"
+        ))
 
 
 @app.get("/")

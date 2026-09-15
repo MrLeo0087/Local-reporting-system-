@@ -2,115 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Public Feed — Local Civic Problem Reporting System</title>
-<link rel="stylesheet" href="css/style.css?v=2" />
+<meta http-equiv="refresh" content="0; url=login.html" />
+<title>Civic Problem Reporting</title>
+<script>window.location.replace("login.html");</script>
 </head>
 <body>
-
-<header class="site-header">
-  <a class="brand" href="index.html"><span class="brand-icon">🏙️</span>Civic Problem Reporting</a>
-  <nav id="nav-links"></nav>
-</header>
-
-<main>
-  <h1>Public Feed</h1>
-  <p class="subtitle">Local infrastructure problems reported by citizens, with live status.</p>
-
-  <div class="filters">
-    <select id="category-filter">
-      <option value="">All categories</option>
-    </select>
-    <select id="status-filter">
-      <option value="">All statuses</option>
-      <option value="submitted">Submitted</option>
-      <option value="verified">Verified</option>
-      <option value="rejected">Rejected</option>
-      <option value="in_progress">In Progress</option>
-      <option value="completed">Completed</option>
-    </select>
-  </div>
-
-  <div id="error-box" class="error-box"></div>
-  <div id="report-list" class="report-list"></div>
-</main>
-
-<footer class="site-footer">
-  E-Governance Laboratory Project — Tribhuvan University
-</footer>
-
-<script src="js/api.js?v=2"></script>
-<script src="js/auth.js?v=3"></script>
-<script>
-  renderCitizenHeader("index.html");
-
-  const categorySelect = document.getElementById("category-filter");
-  CATEGORIES.forEach((c) => {
-    const opt = document.createElement("option");
-    opt.value = c.value;
-    opt.textContent = c.label;
-    categorySelect.appendChild(opt);
-  });
-
-  const listEl = document.getElementById("report-list");
-  const errorEl = document.getElementById("error-box");
-  const statusSelect = document.getElementById("status-filter");
-
-  function initials(name) {
-    return (name || "?").trim().charAt(0).toUpperCase();
-  }
-
-  function reportCardHtml(r) {
-    return `
-      <div class="card report-card">
-        <div class="post-header">
-          <div class="avatar">${initials(r.reporter_name)}</div>
-          <div class="post-header-text">
-            <div class="post-author">${escapeHtml(r.reporter_name)}</div>
-            <div class="post-meta">${categoryLabel(r.category)} • Ward ${r.ward_no} • ${formatDate(r.created_at)}</div>
-          </div>
-          <span class="badge ${r.status}">${statusLabel(r.status)}</span>
-        </div>
-        <a href="report-detail.html?id=${r.id}">
-          <img src="${photoUrl(r.photo_path)}" alt="Photo of reported problem" />
-        </a>
-        <div class="report-card-body">
-          <h3><a href="report-detail.html?id=${r.id}">${categoryLabel(r.category)} — Ward ${r.ward_no}</a></h3>
-          <div class="meta-row">📍 Near ${escapeHtml(r.landmark)}</div>
-        </div>
-      </div>
-    `;
-  }
-
-  function escapeHtml(str) {
-    const div = document.createElement("div");
-    div.textContent = str;
-    return div.innerHTML;
-  }
-
-  async function loadReports() {
-    showBox(errorEl, "");
-    listEl.innerHTML = spinnerHtml();
-    try {
-      const params = new URLSearchParams();
-      if (categorySelect.value) params.set("category", categorySelect.value);
-      if (statusSelect.value) params.set("status_filter", statusSelect.value);
-      const query = params.toString() ? `?${params.toString()}` : "";
-      const reports = await apiFetch(`/reports${query}`);
-      if (reports.length === 0) {
-        listEl.innerHTML = `<p class="empty-state">No reports match these filters yet.</p>`;
-        return;
-      }
-      listEl.innerHTML = reports.map(reportCardHtml).join("");
-    } catch (err) {
-      showBox(errorEl, err.message);
-      listEl.innerHTML = "";
-    }
-  }
-
-  categorySelect.addEventListener("change", loadReports);
-  statusSelect.addEventListener("change", loadReports);
-  loadReports();
-</script>
+<p>Redirecting to <a href="login.html">login</a>…</p>
 </body>
 </html>

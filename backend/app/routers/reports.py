@@ -1,9 +1,11 @@
+import os
 import uuid
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Response
 from sqlalchemy.orm import Session, joinedload
 
+from app.config import settings
 from app.database import get_db
 from app.models.citizen import Citizen
 from app.models.report import Report, REPORT_STATUSES
@@ -11,7 +13,7 @@ from app.models.status_log import StatusLog
 from app.models.staff import STAFF_CATEGORIES
 from app.schemas.report import ReportOut, ReportDetailOut
 from app.auth.dependencies import get_current_citizen
-from app.utils.uploads import save_report_photo
+from app.utils.uploads import process_report_photo
 from app.utils.fake_report_lock import check_not_locked
 
 router = APIRouter(tags=["reports"])
@@ -30,7 +32,7 @@ def _to_report_out(report: Report) -> ReportOut:
         ward_no=report.ward_no,
         landmark=report.landmark,
         description=report.description,
-        photo_path=report.photo_path,
+        photo_path=report.photo_url,
         latitude=report.latitude,
         longitude=report.longitude,
         status=report.status,
@@ -65,7 +67,7 @@ def submit_report(
     except ValueError as exc:
         raise HTTPException(status_code=403, detail=str(exc))
 
-    photo_path = save_report_photo(photo)
+    photo_bytes, photo_content_type, filename = process_report_photo(photo)
 
     report = Report(
         citizen_id=citizen.id,
@@ -73,7 +75,9 @@ def submit_report(
         ward_no=ward_no,
         landmark=landmark.strip(),
         description=description.strip(),
-        photo_path=photo_path,
+        photo_path=filename,
+        photo_data=photo_bytes,
+        photo_content_type=photo_content_type,
         latitude=latitude,
         longitude=longitude,
         display_publicly=display_publicly,
@@ -88,6 +92,29 @@ def submit_report(
     db.commit()
     db.refresh(report)
     return _to_report_out(report)
+
+
+@router.get("/reports/{report_id}/photo")
+def report_photo(report_id: uuid.UUID, db: Session = Depends(get_db)):
+    report = db.query(Report).filter(Report.id == report_id).first()
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found.")
+
+    if report.photo_data:
+        return Response(content=report.photo_data, media_type=report.photo_content_type or "image/jpeg")
+
+    # Legacy fallback for reports uploaded before photos moved into the
+    # database — only works if the file still happens to exist on local
+    # disk (won't be true on Render after a restart).
+    legacy_file = os.path.join(settings.upload_dir, os.path.basename(report.photo_path or ""))
+    if os.path.isfile(legacy_file):
+        with open(legacy_file, "rb") as f:
+            data = f.read()
+        ext = os.path.splitext(legacy_file)[1].lower()
+        media_type = "image/png" if ext == ".png" else "image/jpeg"
+        return Response(content=data, media_type=media_type)
+
+    raise HTTPException(status_code=404, detail="Photo not available for this report.")
 
 
 @router.get("/reports", response_model=list[ReportOut])

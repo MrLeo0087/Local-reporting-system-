@@ -11,6 +11,7 @@ from sqlalchemy import (
     TIMESTAMP,
     ForeignKey,
     CheckConstraint,
+    LargeBinary,
     func,
 )
 from sqlalchemy.dialects.postgresql import UUID
@@ -33,7 +34,13 @@ class Report(Base):
     ward_no = Column(Integer, nullable=False)
     landmark = Column(String(200), nullable=False)
     description = Column(Text, nullable=False)
+
+    # Legacy field, kept for old rows — no longer used to serve photos (Render's
+    # free-tier disk is wiped on every restart, so files written there don't
+    # survive). New uploads instead go straight into the database below.
     photo_path = Column(Text, nullable=False)
+    photo_data = Column(LargeBinary, nullable=True)
+    photo_content_type = Column(String(50), nullable=True)
 
     latitude = Column(Float, nullable=True)
     longitude = Column(Float, nullable=True)
@@ -53,6 +60,11 @@ class Report(Base):
     status_logs = relationship(
         "StatusLog", back_populates="report", order_by="StatusLog.created_at"
     )
+
+    @property
+    def photo_url(self) -> str:
+        """Where the frontend fetches this report's photo from (see GET /reports/{id}/photo)."""
+        return f"/reports/{self.id}/photo"
 
     __table_args__ = (
         CheckConstraint(f"category IN {STAFF_CATEGORIES}", name="report_category_check"),

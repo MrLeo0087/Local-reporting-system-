@@ -2,6 +2,7 @@
 Reusable FastAPI dependencies for protecting routes:
 - get_current_citizen
 - get_current_staff   (any staff member, including admins)
+- require_staff_only  (department staff only — not admins)
 - require_admin       (admins only)
 """
 import uuid
@@ -67,6 +68,20 @@ def get_current_staff(
     staff = db.query(Staff).filter(Staff.id == staff_id).first()
     if staff is None:
         raise CREDENTIALS_EXCEPTION
+    return staff
+
+
+def require_staff_only(staff: Staff = Depends(get_current_staff)) -> Staff:
+    """
+    Reviewing/resolving complaints is department staff's job, not admin's —
+    admin only manages staff accounts. Blocks admin tokens from every
+    complaint-handling endpoint (reading the queue and acting on reports).
+    """
+    if staff.role != "staff":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This action is for department staff only, not admins.",
+        )
     return staff
 
 
