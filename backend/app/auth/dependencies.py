@@ -68,6 +68,10 @@ def get_current_staff(
     staff = db.query(Staff).filter(Staff.id == staff_id).first()
     if staff is None:
         raise CREDENTIALS_EXCEPTION
+    if staff.disabled:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="This account has been disabled."
+        )
     return staff
 
 

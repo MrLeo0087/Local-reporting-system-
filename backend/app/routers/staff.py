@@ -50,6 +50,8 @@ def login(payload: StaffLogin, db: Session = Depends(get_db)):
     staff = db.query(Staff).filter(Staff.email == payload.email).first()
     if not staff or not verify_password(payload.password, staff.password_hash):
         raise HTTPException(status_code=401, detail="Incorrect email or password.")
+    if staff.disabled:
+        raise HTTPException(status_code=403, detail="This account has been disabled.")
 
     token = create_access_token(
         {

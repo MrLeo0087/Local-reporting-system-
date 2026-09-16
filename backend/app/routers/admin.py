@@ -7,6 +7,7 @@ from app.database import get_db
 from app.models.staff import Staff
 from app.models.citizen import Citizen
 from app.schemas.staff import StaffCreate, StaffOut
+from app.schemas.citizen import CitizenAdminOut
 from app.auth.security import hash_password
 from app.auth.dependencies import require_admin
 
@@ -42,7 +43,53 @@ def list_staff(db: Session = Depends(get_db), _admin: Staff = Depends(require_ad
     return db.query(Staff).order_by(Staff.created_at.desc()).all()
 
 
-@router.patch("/citizens/{citizen_id}/disable", response_model=dict)
+@router.patch("/staff/{staff_id}/disable", response_model=StaffOut)
+def disable_staff(
+    staff_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    admin: Staff = Depends(require_admin),
+):
+    if staff_id == admin.id:
+        raise HTTPException(status_code=400, detail="You cannot disable your own account.")
+
+    staff = db.query(Staff).filter(Staff.id == staff_id).first()
+    if not staff:
+        raise HTTPException(status_code=404, detail="Staff account not found.")
+
+    # A "remove" here means disable rather than delete: status_logs.staff_id
+    # references this row for every action they've ever taken, so a real
+    # DELETE would either fail outright or blow a hole in the audit trail.
+    # Disabling blocks login/API use immediately while keeping history intact.
+    staff.disabled = True
+    db.add(staff)
+    db.commit()
+    db.refresh(staff)
+    return staff
+
+
+@router.patch("/staff/{staff_id}/enable", response_model=StaffOut)
+def enable_staff(
+    staff_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    _admin: Staff = Depends(require_admin),
+):
+    staff = db.query(Staff).filter(Staff.id == staff_id).first()
+    if not staff:
+        raise HTTPException(status_code=404, detail="Staff account not found.")
+
+    staff.disabled = False
+    db.add(staff)
+    db.commit()
+    db.refresh(staff)
+    return staff
+
+
+@router.get("/citizens", response_model=list[CitizenAdminOut])
+def list_citizens(db: Session = Depends(get_db), _admin: Staff = Depends(require_admin)):
+    return db.query(Citizen).order_by(Citizen.created_at.desc()).all()
+
+
+@router.patch("/citizens/{citizen_id}/disable", response_model=CitizenAdminOut)
 def disable_citizen(
     citizen_id: uuid.UUID,
     db: Session = Depends(get_db),
@@ -55,4 +102,22 @@ def disable_citizen(
     citizen.disabled = True
     db.add(citizen)
     db.commit()
-    return {"id": str(citizen.id), "disabled": True}
+    db.refresh(citizen)
+    return citizen
+
+
+@router.patch("/citizens/{citizen_id}/enable", response_model=CitizenAdminOut)
+def enable_citizen(
+    citizen_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    _admin: Staff = Depends(require_admin),
+):
+    citizen = db.query(Citizen).filter(Citizen.id == citizen_id).first()
+    if not citizen:
+        raise HTTPException(status_code=404, detail="Citizen not found.")
+
+    citizen.disabled = False
+    db.add(citizen)
+    db.commit()
+    db.refresh(citizen)
+    return citizen

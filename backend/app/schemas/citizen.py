@@ -34,3 +34,16 @@ class TokenOut(BaseModel):
     access_token: str
     token_type: str = "bearer"
     role: str
+
+
+class CitizenAdminOut(BaseModel):
+    """Admin-only view of a citizen — includes fields CitizenOut deliberately hides."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    full_name: str
+    email: EmailStr
+    phone: str
+    disabled: bool
+    created_at: datetime

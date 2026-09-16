@@ -143,3 +143,42 @@ function wirePasswordToggles() {
 }
 
 document.addEventListener("DOMContentLoaded", wirePasswordToggles);
+
+/**
+ * Dark mode. localStorage["theme"] is "dark", "light", or unset — unset
+ * always means light (the site does not follow the OS/browser setting; only
+ * the toggle button changes it). The <head> of every page also runs a tiny
+ * inline copy of the "apply" half of this before the stylesheet paints, so
+ * there's no flash of the wrong theme on load — this just keeps it in sync
+ * and wires up the toggle button(s).
+ */
+function currentEffectiveTheme() {
+  return localStorage.getItem("theme") === "dark" ? "dark" : "light";
+}
+
+function updateThemeToggleIcons() {
+  const isDark = currentEffectiveTheme() === "dark";
+  document.querySelectorAll("[data-theme-toggle]").forEach((btn) => {
+    btn.textContent = isDark ? "☀️" : "🌙";
+    btn.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
+  });
+}
+
+function initThemeToggles() {
+  const saved = localStorage.getItem("theme");
+  if (saved === "dark" || saved === "light") {
+    document.documentElement.setAttribute("data-theme", saved);
+  }
+  updateThemeToggleIcons();
+
+  document.querySelectorAll("[data-theme-toggle]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const next = currentEffectiveTheme() === "dark" ? "light" : "dark";
+      localStorage.setItem("theme", next);
+      document.documentElement.setAttribute("data-theme", next);
+      updateThemeToggleIcons();
+    });
+  });
+}
+
+document.addEventListener("DOMContentLoaded", initThemeToggles);

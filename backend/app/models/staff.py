@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Column, String, Integer, TIMESTAMP, CheckConstraint, func
+from sqlalchemy import Column, String, Integer, Boolean, TIMESTAMP, CheckConstraint, func
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.database import Base
@@ -19,6 +19,7 @@ class Staff(Base):
     role = Column(String(20), nullable=False)
     category = Column(String(30), nullable=True)  # nullable for admin
     ward_no = Column(Integer, nullable=True)  # nullable for admin
+    disabled = Column(Boolean, nullable=False, default=False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=func.now())
 
     __table_args__ = (

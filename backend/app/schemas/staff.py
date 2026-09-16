@@ -42,4 +42,5 @@ class StaffOut(BaseModel):
     role: str
     category: Optional[str] = None
     ward_no: Optional[int] = None
+    disabled: bool
     created_at: datetime

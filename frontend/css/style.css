@@ -27,6 +27,40 @@
   --radius-lg: 12px;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.06);
   --shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.1), 0 6px 16px rgba(0, 0, 0, 0.08);
+  --error-bg: #fdecea;
+  --error-border: #f5b5b0;
+  --success-bg: #e7f6ec;
+  --success-border: #a8ddb8;
+  --card-border: transparent;
+}
+
+/* Dark mode only applies when explicitly turned on via the toggle button in
+   the header (data-theme="dark") — light is always the default, regardless
+   of the OS/browser setting. See api.js for the toggle logic. */
+:root[data-theme="dark"] {
+  --blue: #4599ff;
+  --blue-dark: #2e89ff;
+  --blue-soft: #1b2a3d;
+  --green: #3fc463;
+  --green-dark: #2fa350;
+  --red: #f45b5b;
+  --red-dark: #e04343;
+  --orange: #f0a020;
+  --orange-dark: #d68a0f;
+  --gray-bg: #18191a;
+  --gray-border: #3a3b3c;
+  --gray-fill: #3a3b3c;
+  --gray-fill-hover: #4e4f50;
+  --text: #e4e6eb;
+  --text-muted: #b0b3b8;
+  --white: #242526;
+  --error-bg: #3a1f1f;
+  --error-border: #5c2b2b;
+  --success-bg: #1e3324;
+  --success-border: #2c4d34;
+  --card-border: var(--gray-border);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.3);
+  --shadow-hover: 0 2px 4px rgba(0, 0, 0, 0.45), 0 6px 16px rgba(0, 0, 0, 0.35);
 }
 
 * {
@@ -39,6 +73,22 @@ body {
   background: var(--gray-bg);
   color: var(--text);
   line-height: 1.5;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.theme-toggle {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1.15rem;
+  line-height: 1;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s;
+}
+
+.theme-toggle:hover {
+  background: var(--gray-fill);
 }
 
 a {
@@ -145,7 +195,7 @@ h1 {
 
 .card {
   background: var(--white);
-  border: none;
+  border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
   padding: 18px 20px;
@@ -361,8 +411,8 @@ button.btn.loading::after {
 /* ---------- Alerts ---------- */
 
 .error-box {
-  background: #fdecea;
-  border: 1px solid #f5b5b0;
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
   color: var(--red-dark);
   padding: 12px 14px;
   border-radius: var(--radius-sm);
@@ -373,8 +423,8 @@ button.btn.loading::after {
 }
 
 .success-box {
-  background: #e7f6ec;
-  border: 1px solid #a8ddb8;
+  background: var(--success-bg);
+  border: 1px solid var(--success-border);
   color: var(--green-dark);
   padding: 12px 14px;
   border-radius: var(--radius-sm);
@@ -627,4 +677,155 @@ footer.site-footer {
   color: var(--text-muted);
   font-size: 0.82rem;
   padding: 24px 20px;
+}
+
+/* ---------- Landing page ---------- */
+
+.hero {
+  background: linear-gradient(160deg, var(--blue), var(--blue-dark));
+  color: #ffffff;
+  padding: 64px 20px 76px;
+  text-align: center;
+}
+
+.hero h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  max-width: 680px;
+  margin: 0 auto 14px;
+  letter-spacing: -0.02em;
+}
+
+.hero p.hero-subtitle {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 560px;
+  margin: 0 auto 30px;
+}
+
+.hero-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.hero-actions .btn {
+  margin-top: 0;
+}
+
+.hero-actions a.btn.secondary {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.hero-actions a.btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.landing-section {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 56px 20px;
+}
+
+.landing-section h2 {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.landing-section > p.section-subtitle {
+  text-align: center;
+  color: var(--text-muted);
+  max-width: 520px;
+  margin: 0 auto 36px;
+}
+
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.step-card {
+  background: var(--white);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 24px 20px;
+  text-align: center;
+}
+
+.step-card .step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--blue-soft);
+  color: var(--blue);
+  font-weight: 800;
+  font-size: 1.1rem;
+  margin-bottom: 14px;
+}
+
+.step-card h3 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+}
+
+.step-card p {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  margin: 0;
+}
+
+.role-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.role-card {
+  background: var(--white);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 28px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.role-card .role-icon {
+  font-size: 2rem;
+  margin-bottom: 12px;
+}
+
+.role-card h3 {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+}
+
+.role-card p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin: 0 0 18px;
+  flex: 1;
+}
+
+.role-card .role-links {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.role-card .btn {
+  margin-top: 0;
 }

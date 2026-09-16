@@ -2,11 +2,93 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta http-equiv="refresh" content="0; url=login.html" />
-<title>Civic Problem Reporting</title>
-<script>window.location.replace("login.html");</script>
+<script>(function(){var t=localStorage.getItem("theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);})();</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Local Civic Problem Reporting System</title>
+<link rel="stylesheet" href="css/style.css?v=3" />
 </head>
 <body>
-<p>Redirecting to <a href="login.html">login</a>…</p>
+
+<header class="site-header">
+  <a class="brand" href="index.html"><span class="brand-icon">🏙️</span>Civic Problem Reporting</a>
+  <nav>
+    <a href="feed.html">Public Feed</a>
+    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode"></button>
+  </nav>
+</header>
+
+<section class="hero">
+  <h1>Report Local Infrastructure Problems — and Actually See Them Fixed</h1>
+  <p class="hero-subtitle">
+    Potholes, broken streetlights, water leaks — report them with a photo and
+    location, and track every step until the responsible department resolves
+    it. No paper registers, no phone calls into the void.
+  </p>
+  <div class="hero-actions">
+    <a class="btn" href="register.html">Get Started — Register</a>
+    <a class="btn secondary" href="feed.html">View Public Feed</a>
+  </div>
+</section>
+
+<section class="landing-section">
+  <h2>How It Works</h2>
+  <p class="section-subtitle">From a problem on your street to a resolved report — three steps, fully tracked.</p>
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <h3>Report</h3>
+      <p>Snap a photo, pick the category and your ward, and optionally drop a pin on the map.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <h3>Route &amp; Review</h3>
+      <p>Your report goes straight to the staff responsible for that category and ward — no manual sorting.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <h3>Track to Resolution</h3>
+      <p>Watch the status change live — verified, in progress, completed — with a full history you can check anytime.</p>
+    </div>
+  </div>
+</section>
+
+<section class="landing-section">
+  <h2>Get Started</h2>
+  <p class="section-subtitle">Choose how you'll be using the system.</p>
+  <div class="role-grid">
+    <div class="role-card">
+      <div class="role-icon">🙋</div>
+      <h3>I'm a Citizen</h3>
+      <p>Report problems in your area and track them until they're resolved.</p>
+      <div class="role-links">
+        <a class="btn small" href="login.html">Log In</a>
+        <a class="btn small secondary" href="register.html">Register</a>
+      </div>
+    </div>
+    <div class="role-card">
+      <div class="role-icon">🛠️</div>
+      <h3>I'm Government Staff</h3>
+      <p>Review, verify, and resolve reports for your assigned category and ward.</p>
+      <div class="role-links">
+        <a class="btn small" href="staff-login.html">Staff Login</a>
+      </div>
+    </div>
+    <div class="role-card">
+      <div class="role-icon">🗝️</div>
+      <h3>I'm an Administrator</h3>
+      <p>Manage staff accounts and oversee citizen accounts across the system.</p>
+      <div class="role-links">
+        <a class="btn small" href="staff-login.html">Admin Login</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  E-Governance Laboratory Project — Tribhuvan University
+</footer>
+
+<script src="js/api.js?v=4"></script>
+<script src="js/auth.js?v=8"></script>
 </body>
 </html>

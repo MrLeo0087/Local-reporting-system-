@@ -55,6 +55,9 @@ def create_tables_if_missing():
         conn.execute(text(
             "ALTER TABLE reports ADD COLUMN IF NOT EXISTS photo_content_type VARCHAR(50)"
         ))
+        conn.execute(text(
+            "ALTER TABLE staff ADD COLUMN IF NOT EXISTS disabled BOOLEAN NOT NULL DEFAULT FALSE"
+        ))
 
 
 @app.get("/")

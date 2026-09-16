@@ -48,6 +48,7 @@ function renderCitizenHeader(activePage) {
   if (!staffToken) {
     html += `<a href="staff-login.html">Staff Login</a>`;
   }
+  html += `<button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode"></button>`;
 
   // Set the whole nav in one assignment — building it piece by piece with
   // extra `nav.innerHTML += ...` calls after attaching a JS click handler
@@ -59,7 +60,7 @@ function renderCitizenHeader(activePage) {
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
       clearToken(staffToken ? "staff" : "citizen");
-      window.location.href = "login.html";
+      window.location.href = "index.html";
     });
   }
 }
