@@ -97,6 +97,18 @@ function categoryLabel(value) {
   return found ? found.label : value;
 }
 
+const CATEGORY_ICONS = {
+  road: "🛣️",
+  electric: "⚡",
+  water_supply: "🚰",
+  public_property: "🏛️",
+  other: "🗂️",
+};
+
+function categoryIcon(value) {
+  return CATEGORY_ICONS[value] || "📍";
+}
+
 function statusLabel(value) {
   return value.replace("_", " ");
 }
@@ -182,3 +194,46 @@ function initThemeToggles() {
 }
 
 document.addEventListener("DOMContentLoaded", initThemeToggles);
+
+/**
+ * Scroll-reveal: any element with class="reveal" fades/slides into view the
+ * first time it scrolls into the viewport. Add reveal-stagger alongside it
+ * on a group of siblings for a staggered cascade (see style.css).
+ */
+function initScrollReveal() {
+  const els = document.querySelectorAll(".reveal");
+  if (!els.length) return;
+
+  if (!("IntersectionObserver" in window)) {
+    els.forEach((el) => el.classList.add("revealed"));
+    return;
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("revealed");
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.15 }
+  );
+  els.forEach((el) => observer.observe(el));
+}
+
+document.addEventListener("DOMContentLoaded", initScrollReveal);
+
+/**
+ * Staggered entrance animation for a freshly-rendered list of cards/rows —
+ * call right after setting a container's innerHTML to a batch of items
+ * (report cards, staff/citizen table rows, etc).
+ */
+function animateCardsIn(container, selector = ":scope > *") {
+  if (!container) return;
+  container.querySelectorAll(selector).forEach((el, i) => {
+    el.classList.add("card-anim-in");
+    el.style.animationDelay = `${Math.min(i, 8) * 45}ms`;
+  });
+}

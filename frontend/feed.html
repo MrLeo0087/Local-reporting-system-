@@ -5,7 +5,7 @@
 <script>(function(){var t=localStorage.getItem("theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Public Feed — Local Civic Problem Reporting System</title>
-<link rel="stylesheet" href="css/style.css?v=3" />
+<link rel="stylesheet" href="css/style.css?v=9" />
 </head>
 <body>
 
@@ -19,6 +19,7 @@
   <p class="subtitle">Local infrastructure problems reported by citizens, with live status.</p>
 
   <div class="filters">
+    <input type="search" id="search-filter" placeholder="🔎 Search landmark or description…" />
     <select id="category-filter">
       <option value="">All categories</option>
     </select>
@@ -30,7 +31,13 @@
       <option value="in_progress">In Progress</option>
       <option value="completed">Completed</option>
     </select>
+    <select id="sort-filter">
+      <option value="newest">Newest first</option>
+      <option value="oldest">Oldest first</option>
+    </select>
   </div>
+
+  <p id="results-count" class="results-count"></p>
 
   <div id="error-box" class="error-box"></div>
   <div id="report-list" class="report-list"></div>
@@ -40,7 +47,7 @@
   E-Governance Laboratory Project — Tribhuvan University
 </footer>
 
-<script src="js/api.js?v=4"></script>
+<script src="js/api.js?v=8"></script>
 <script src="js/auth.js?v=8"></script>
 <script>
   renderCitizenHeader("feed.html");
@@ -56,6 +63,11 @@
   const listEl = document.getElementById("report-list");
   const errorEl = document.getElementById("error-box");
   const statusSelect = document.getElementById("status-filter");
+  const sortSelect = document.getElementById("sort-filter");
+  const searchInput = document.getElementById("search-filter");
+  const resultsCountEl = document.getElementById("results-count");
+
+  let allReports = [];
 
   function initials(name) {
     return (name || "?").trim().charAt(0).toUpperCase();
@@ -72,8 +84,9 @@
           </div>
           <span class="badge ${r.status}">${statusLabel(r.status)}</span>
         </div>
-        <a href="report-detail.html?id=${r.id}">
+        <a href="report-detail.html?id=${r.id}" class="report-img-wrap">
           <img src="${photoUrl(r.photo_path)}" alt="Photo of reported problem" />
+          <span class="category-chip">${categoryIcon(r.category)} ${categoryLabel(r.category)}</span>
         </a>
         <div class="report-card-body">
           <h3><a href="report-detail.html?id=${r.id}">${categoryLabel(r.category)} — Ward ${r.ward_no}</a></h3>
@@ -89,20 +102,41 @@
     return div.innerHTML;
   }
 
+  function applyFiltersAndRender() {
+    const term = searchInput.value.trim().toLowerCase();
+    let reports = allReports.filter((r) => {
+      if (!term) return true;
+      return (r.landmark || "").toLowerCase().includes(term) || (r.description || "").toLowerCase().includes(term);
+    });
+
+    reports = reports.slice().sort((a, b) => {
+      const diff = new Date(a.created_at) - new Date(b.created_at);
+      return sortSelect.value === "oldest" ? diff : -diff;
+    });
+
+    resultsCountEl.textContent = allReports.length
+      ? `Showing ${reports.length} of ${allReports.length} report${allReports.length === 1 ? "" : "s"}`
+      : "";
+
+    if (reports.length === 0) {
+      listEl.innerHTML = `<p class="empty-state"><span class="empty-icon">🔍</span>No reports match these filters yet.</p>`;
+      return;
+    }
+    listEl.innerHTML = reports.map(reportCardHtml).join("");
+    animateCardsIn(listEl);
+  }
+
   async function loadReports() {
     showBox(errorEl, "");
     listEl.innerHTML = spinnerHtml();
+    resultsCountEl.textContent = "";
     try {
       const params = new URLSearchParams();
       if (categorySelect.value) params.set("category", categorySelect.value);
       if (statusSelect.value) params.set("status_filter", statusSelect.value);
       const query = params.toString() ? `?${params.toString()}` : "";
-      const reports = await apiFetch(`/reports${query}`);
-      if (reports.length === 0) {
-        listEl.innerHTML = `<p class="empty-state">No reports match these filters yet.</p>`;
-        return;
-      }
-      listEl.innerHTML = reports.map(reportCardHtml).join("");
+      allReports = await apiFetch(`/reports${query}`);
+      applyFiltersAndRender();
     } catch (err) {
       showBox(errorEl, err.message);
       listEl.innerHTML = "";
@@ -111,6 +145,12 @@
 
   categorySelect.addEventListener("change", loadReports);
   statusSelect.addEventListener("change", loadReports);
+  sortSelect.addEventListener("change", applyFiltersAndRender);
+  let searchDebounce;
+  searchInput.addEventListener("input", () => {
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(applyFiltersAndRender, 150);
+  });
   loadReports();
 </script>
 </body>

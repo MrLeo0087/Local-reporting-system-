@@ -5,7 +5,7 @@
 <script>(function(){var t=localStorage.getItem("theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>My Reports — Local Civic Problem Reporting System</title>
-<link rel="stylesheet" href="css/style.css?v=3" />
+<link rel="stylesheet" href="css/style.css?v=9" />
 </head>
 <body>
 
@@ -28,7 +28,7 @@
   E-Governance Laboratory Project — Tribhuvan University
 </footer>
 
-<script src="js/api.js?v=4"></script>
+<script src="js/api.js?v=8"></script>
 <script src="js/auth.js?v=8"></script>
 <script>
   requireCitizenLogin();
@@ -76,10 +76,11 @@
     try {
       const reports = await apiFetch("/reports/mine", { authKind: "citizen" });
       if (reports.length === 0) {
-        listEl.innerHTML = `<p class="empty-state">You haven't reported any problems yet.</p>`;
+        listEl.innerHTML = `<p class="empty-state"><span class="empty-icon">📭</span>You haven't reported any problems yet.</p>`;
         return;
       }
       listEl.innerHTML = reports.map(reportCardHtml).join("");
+      animateCardsIn(listEl);
     } catch (err) {
       showBox(errorEl, err.message);
       listEl.innerHTML = "";

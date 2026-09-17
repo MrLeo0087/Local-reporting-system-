@@ -8,8 +8,8 @@ from sqlalchemy import text
 
 from app.config import settings
 from app.database import Base, engine
-from app.models import citizen, staff as staff_model, report, status_log  # noqa: F401
-from app.routers import citizens, reports, staff, admin
+from app.models import citizen, staff as staff_model, report, status_log, message  # noqa: F401
+from app.routers import citizens, reports, staff, admin, messages
 
 app = FastAPI(
     title="Local Civic Problem Reporting System",
@@ -34,6 +34,7 @@ app.include_router(citizens.router)
 app.include_router(reports.router)
 app.include_router(staff.router)
 app.include_router(admin.router)
+app.include_router(messages.router)
 
 
 @app.on_event("startup")
@@ -57,6 +58,22 @@ def create_tables_if_missing():
         ))
         conn.execute(text(
             "ALTER TABLE staff ADD COLUMN IF NOT EXISTS disabled BOOLEAN NOT NULL DEFAULT FALSE"
+        ))
+        conn.execute(text(
+            "ALTER TABLE citizens ADD COLUMN IF NOT EXISTS citizenship_number VARCHAR(50)"
+        ))
+        conn.execute(text(
+            "ALTER TABLE citizens ADD COLUMN IF NOT EXISTS citizenship_photo_data BYTEA"
+        ))
+        conn.execute(text(
+            "ALTER TABLE citizens ADD COLUMN IF NOT EXISTS citizenship_photo_content_type VARCHAR(50)"
+        ))
+        # Plain unique index — Postgres treats NULLs as distinct, so existing
+        # rows without a citizenship number (pre-dating this feature) don't
+        # collide with each other or block the index from being created.
+        conn.execute(text(
+            "CREATE UNIQUE INDEX IF NOT EXISTS ix_citizens_citizenship_number "
+            "ON citizens (citizenship_number)"
         ))
 
 

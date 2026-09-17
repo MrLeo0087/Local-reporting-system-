@@ -5,7 +5,7 @@
 <script>(function(){var t=localStorage.getItem("theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Staff Dashboard — Local Civic Problem Reporting System</title>
-<link rel="stylesheet" href="css/style.css?v=3" />
+<link rel="stylesheet" href="css/style.css?v=9" />
 </head>
 <body>
 
@@ -25,6 +25,7 @@
   <div id="error-box" class="error-box"></div>
   <div id="success-box" class="success-box"></div>
 
+  <div id="stats-row" class="stats-row"></div>
   <div id="report-list" class="report-list"></div>
 </main>
 
@@ -32,7 +33,7 @@
   E-Governance Laboratory Project — Tribhuvan University
 </footer>
 
-<script src="js/api.js?v=4"></script>
+<script src="js/api.js?v=8"></script>
 <script src="js/auth.js?v=8"></script>
 <script>
   requireStaffOnlyLogin();
@@ -45,6 +46,19 @@
   const listEl = document.getElementById("report-list");
   const errorEl = document.getElementById("error-box");
   const successEl = document.getElementById("success-box");
+  const statsEl = document.getElementById("stats-row");
+
+  function renderStats(reports) {
+    const counts = { submitted: 0, verified: 0, in_progress: 0, completed: 0, rejected: 0 };
+    reports.forEach((r) => { if (counts[r.status] !== undefined) counts[r.status]++; });
+    statsEl.innerHTML = `
+      <div class="stat-pill"><span class="stat-num">${reports.length}</span><span class="stat-label">Total</span></div>
+      <div class="stat-pill"><span class="stat-num">${counts.submitted}</span><span class="stat-label">New</span></div>
+      <div class="stat-pill"><span class="stat-num">${counts.verified}</span><span class="stat-label">Verified</span></div>
+      <div class="stat-pill"><span class="stat-num">${counts.in_progress}</span><span class="stat-label">In Progress</span></div>
+      <div class="stat-pill"><span class="stat-num">${counts.completed}</span><span class="stat-label">Completed</span></div>
+    `;
+  }
 
   function escapeHtml(str) {
     const div = document.createElement("div");
@@ -113,12 +127,14 @@
     listEl.innerHTML = spinnerHtml();
     try {
       const reports = await apiFetch("/staff/reports", { authKind: "staff" });
+      renderStats(reports);
       if (reports.length === 0) {
-        listEl.innerHTML = `<p class="empty-state">No reports in your queue right now.</p>`;
+        listEl.innerHTML = `<p class="empty-state"><span class="empty-icon">✅</span>No reports in your queue right now.</p>`;
         return;
       }
       listEl.innerHTML = reports.map(reportRowHtml).join("");
       wireUpCards();
+      animateCardsIn(listEl);
     } catch (err) {
       showBox(errorEl, err.message);
       listEl.innerHTML = "";

@@ -67,3 +67,20 @@ class ProgressReportIn(BaseModel):
 
 class SimpleActionIn(BaseModel):
     comment: Optional[str] = None
+
+
+class UnassignedReportOut(BaseModel):
+    """
+    Admin-only, read-only: a report with no active staff member matching its
+    category+ward, so nobody currently sees it in a staff dashboard. Lets
+    admin notice and close the gap by creating the right staff account —
+    admin still can't act on the report itself (see require_staff_only).
+    """
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    category: str
+    ward_no: int
+    landmark: str
+    status: str
+    created_at: datetime

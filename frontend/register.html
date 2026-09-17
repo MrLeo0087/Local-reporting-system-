@@ -5,7 +5,7 @@
 <script>(function(){var t=localStorage.getItem("theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Register — Local Civic Problem Reporting System</title>
-<link rel="stylesheet" href="css/style.css?v=3" />
+<link rel="stylesheet" href="css/style.css?v=9" />
 </head>
 <body>
 
@@ -14,35 +14,54 @@
   <nav id="nav-links"></nav>
 </header>
 
-<main>
-  <div class="card form-card">
-    <h1>Create a Citizen Account</h1>
-    <p class="subtitle">Register to report local infrastructure problems.</p>
+<main class="auth-shell">
+  <div class="auth-visual">
+    <div class="auth-visual-icon">📝</div>
+    <h2>Join a more transparent way to fix your street.</h2>
+    <p>One free account lets you file reports with a photo and location, and watch exactly what happens next.</p>
+    <div class="auth-visual-points">
+      <span>✅ Free, takes under a minute</span>
+      <span>🕵️ Report anonymously if you prefer</span>
+      <span>📊 See every status update in real time</span>
+    </div>
+  </div>
+  <div class="auth-form-panel">
+    <div class="card form-card">
+      <h1>Create a Citizen Account</h1>
+      <p class="subtitle">Register to report local infrastructure problems.</p>
 
-    <div id="error-box" class="error-box"></div>
-    <div id="success-box" class="success-box"></div>
+      <div id="error-box" class="error-box"></div>
+      <div id="success-box" class="success-box"></div>
 
-    <form id="register-form">
-      <label for="full_name">Full name</label>
-      <input type="text" id="full_name" required maxlength="150" />
+      <form id="register-form">
+        <label for="full_name">Full name</label>
+        <input type="text" id="full_name" required maxlength="150" />
 
-      <label for="email">Email</label>
-      <input type="email" id="email" required maxlength="150" />
+        <label for="email">Email</label>
+        <input type="email" id="email" required maxlength="150" />
 
-      <label for="phone">Phone number</label>
-      <input type="tel" id="phone" required maxlength="20" />
+        <label for="phone">Phone number</label>
+        <input type="tel" id="phone" required maxlength="20" />
 
-      <label for="password">Password</label>
-      <div class="password-field">
-        <input type="password" id="password" required minlength="8" />
-        <button type="button" class="password-toggle" data-target="password" aria-label="Show password">👁</button>
-      </div>
-      <p class="helper-text">At least 8 characters.</p>
+        <label for="password">Password</label>
+        <div class="password-field">
+          <input type="password" id="password" required minlength="8" />
+          <button type="button" class="password-toggle" data-target="password" aria-label="Show password">👁</button>
+        </div>
+        <p class="helper-text">At least 8 characters.</p>
 
-      <button type="submit" class="btn">Create Account</button>
-    </form>
+        <label for="citizenship_number">Citizenship number</label>
+        <input type="text" id="citizenship_number" required maxlength="50" placeholder="e.g. 12-34-56-78901" />
+        <p class="helper-text">Used once to verify you're a real, unique citizen — one citizenship number can register only one account.</p>
 
-    <p style="margin-top:16px;">Already have an account? <a href="login.html">Log in</a></p>
+        <label for="citizenship_photo">Photo of your citizenship card</label>
+        <input type="file" id="citizenship_photo" accept=".jpg,.jpeg,.png" required />
+
+        <button type="submit" class="btn" style="width:100%;">Create Account</button>
+      </form>
+
+      <p style="margin-top:16px;">Already have an account? <a href="login.html">Log in</a></p>
+    </div>
   </div>
 </main>
 
@@ -50,7 +69,7 @@
   E-Governance Laboratory Project — Tribhuvan University
 </footer>
 
-<script src="js/api.js?v=4"></script>
+<script src="js/api.js?v=8"></script>
 <script src="js/auth.js?v=8"></script>
 <script>
   if (!redirectIfAlreadyLoggedInAsCitizen()) {
@@ -68,14 +87,22 @@
       setButtonLoading(submitBtn, true);
 
       try {
+        const photoInput = document.getElementById("citizenship_photo");
+        if (!photoInput.files[0]) {
+          throw new Error("Please upload a photo of your citizenship card.");
+        }
+        const fd = new FormData();
+        fd.append("full_name", document.getElementById("full_name").value.trim());
+        fd.append("email", document.getElementById("email").value.trim());
+        fd.append("phone", document.getElementById("phone").value.trim());
+        fd.append("password", document.getElementById("password").value);
+        fd.append("citizenship_number", document.getElementById("citizenship_number").value.trim());
+        fd.append("citizenship_photo", photoInput.files[0]);
+
         await apiFetch("/citizens/register", {
           method: "POST",
-          body: {
-            full_name: document.getElementById("full_name").value.trim(),
-            email: document.getElementById("email").value.trim(),
-            phone: document.getElementById("phone").value.trim(),
-            password: document.getElementById("password").value,
-          },
+          body: fd,
+          isFormData: true,
         });
         showBox(successEl, "Account created! Redirecting to login…");
         setTimeout(() => (window.location.href = "login.html"), 1200);

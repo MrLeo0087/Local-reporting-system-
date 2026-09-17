@@ -60,6 +60,9 @@ class Report(Base):
     status_logs = relationship(
         "StatusLog", back_populates="report", order_by="StatusLog.created_at"
     )
+    messages = relationship(
+        "Message", back_populates="report", order_by="Message.created_at"
+    )
 
     @property
     def photo_url(self) -> str:

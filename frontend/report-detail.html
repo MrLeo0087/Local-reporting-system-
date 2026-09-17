@@ -5,7 +5,7 @@
 <script>(function(){var t=localStorage.getItem("theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Report Detail — Local Civic Problem Reporting System</title>
-<link rel="stylesheet" href="css/style.css?v=3" />
+<link rel="stylesheet" href="css/style.css?v=9" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
@@ -25,7 +25,7 @@
   E-Governance Laboratory Project — Tribhuvan University
 </footer>
 
-<script src="js/api.js?v=4"></script>
+<script src="js/api.js?v=8"></script>
 <script src="js/auth.js?v=8"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="js/map.js?v=2"></script>
@@ -99,14 +99,95 @@
           <h3>Status History</h3>
           ${statusLogHtml(r.status_logs)}
         </div>
+
+        <div class="card" id="messages-card" style="display:none;">
+          <h3>Messages</h3>
+          <div id="message-thread" class="message-thread"></div>
+          <form id="message-form" class="message-form">
+            <textarea id="message-input" placeholder="Write a message…" required></textarea>
+            <button type="submit" class="btn small">Send</button>
+          </form>
+          <button type="button" id="ask-progress-btn" class="btn small secondary" style="margin-top:10px;">Ask for Progress Update</button>
+        </div>
       `;
 
       if (r.latitude != null && r.longitude != null) {
         initViewMap("map", r.latitude, r.longitude, `${categoryLabel(r.category)} — Ward ${r.ward_no}`);
       }
+
+      animateCardsIn(container, ".card");
+      loadMessages(id);
     } catch (err) {
       showBox(errorEl, err.message);
       container.innerHTML = "";
+    }
+  }
+
+  function messageBubbleHtml(m) {
+    const cls = m.sender_role === "staff" ? "from-staff" : "from-citizen";
+    return `
+      <div class="message-bubble ${cls}">
+        <div class="msg-meta">${escapeHtml(m.sender_name)} • ${formatDate(m.created_at)}</div>
+        <div>${escapeHtml(m.body)}</div>
+      </div>
+    `;
+  }
+
+  async function sendMessage(reportId, authKind, body) {
+    await apiFetch(`/reports/${reportId}/messages`, { method: "POST", body: { body }, authKind });
+    await loadMessages(reportId);
+  }
+
+  async function loadMessages(reportId) {
+    // Messages are private to the reporting citizen and the assigned staff —
+    // whoever's logged in here, try with that token; a 401/403 just means
+    // this viewer isn't one of those two, so the card stays hidden.
+    const authKind = getToken("citizen") ? "citizen" : getToken("staff") ? "staff" : null;
+    if (!authKind) return;
+
+    const messagesCard = document.getElementById("messages-card");
+    const threadEl = document.getElementById("message-thread");
+
+    try {
+      const messages = await apiFetch(`/reports/${reportId}/messages`, { authKind });
+      messagesCard.style.display = "block";
+      threadEl.innerHTML = messages.length
+        ? messages.map(messageBubbleHtml).join("")
+        : `<p class="empty-state" style="padding:16px 0;">No messages yet — say hello.</p>`;
+      threadEl.scrollTop = threadEl.scrollHeight;
+
+      const form = document.getElementById("message-form");
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const input = document.getElementById("message-input");
+        const body = input.value.trim();
+        if (!body) return;
+        const btn = form.querySelector('button[type="submit"]');
+        setButtonLoading(btn, true);
+        try {
+          input.value = "";
+          await sendMessage(reportId, authKind, body);
+        } catch (err) {
+          showBox(errorEl, err.message);
+        } finally {
+          setButtonLoading(btn, false);
+        }
+      };
+
+      const askBtn = document.getElementById("ask-progress-btn");
+      askBtn.style.display = authKind === "citizen" ? "inline-block" : "none";
+      askBtn.onclick = async () => {
+        setButtonLoading(askBtn, true);
+        try {
+          await sendMessage(reportId, authKind, "Could you share a progress update on this report, please?");
+        } catch (err) {
+          showBox(errorEl, err.message);
+        } finally {
+          setButtonLoading(askBtn, false);
+        }
+      };
+    } catch (err) {
+      messagesCard.style.display = "none";
     }
   }
 

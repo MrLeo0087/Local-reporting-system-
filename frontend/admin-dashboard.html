@@ -5,7 +5,7 @@
 <script>(function(){var t=localStorage.getItem("theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Admin Dashboard — Local Civic Problem Reporting System</title>
-<link rel="stylesheet" href="css/style.css?v=3" />
+<link rel="stylesheet" href="css/style.css?v=9" />
 </head>
 <body>
 
@@ -19,14 +19,21 @@
 </header>
 
 <main class="wide">
-  <h1>Admin Dashboard</h1>
-  <p class="subtitle">Create staff accounts and review the existing staff roster.</p>
+  <div class="admin-hero">
+    <div class="admin-hero-icon">🛡️</div>
+    <div>
+      <h1>Admin Dashboard</h1>
+      <p class="subtitle">Create staff accounts, manage citizens, and keep every ward covered.</p>
+    </div>
+  </div>
 
   <div id="error-box" class="error-box"></div>
   <div id="success-box" class="success-box"></div>
 
-  <div class="card">
-    <h3>Create a New Staff Account</h3>
+  <div id="stats-row" class="stats-row"></div>
+
+  <div class="card section-card accent-blue reveal">
+    <h3><span class="section-icon">➕</span>Create a New Staff Account</h3>
     <form id="staff-form">
       <label for="full_name">Full name</label>
       <input type="text" id="full_name" required maxlength="150" />
@@ -54,12 +61,12 @@
         <input type="number" id="ward_no" min="1" />
       </div>
 
-      <button type="submit" class="btn">Create Staff Account</button>
+      <button type="submit" class="btn">✨ Create Staff Account</button>
     </form>
   </div>
 
-  <div class="card">
-    <h3>Existing Staff Accounts</h3>
+  <div class="card section-card accent-purple reveal">
+    <h3><span class="section-icon">👮</span>Existing Staff Accounts</h3>
     <table class="data-table" id="staff-table">
       <thead>
         <tr><th>Name</th><th>Email</th><th>Role</th><th>Category</th><th>Ward</th><th>Created</th><th>Status</th><th></th></tr>
@@ -70,14 +77,31 @@
     </table>
   </div>
 
-  <div class="card">
-    <h3>All Citizens</h3>
+  <div class="card section-card accent-green reveal">
+    <h3><span class="section-icon">🧑‍🤝‍🧑</span>All Citizens</h3>
     <table class="data-table" id="citizens-table">
       <thead>
-        <tr><th>Name</th><th>Email</th><th>Phone</th><th>Registered</th><th>Status</th><th></th></tr>
+        <tr><th>Name</th><th>Email</th><th>Phone</th><th>Citizenship #</th><th>Registered</th><th>Status</th><th></th></tr>
       </thead>
       <tbody id="citizens-table-body">
-        <tr><td colspan="6"><div class="spinner-center" style="padding:16px 0;"><div class="spinner"></div></div></td></tr>
+        <tr><td colspan="7"><div class="spinner-center" style="padding:16px 0;"><div class="spinner"></div></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card section-card accent-orange reveal">
+    <h3><span class="section-icon">⚠️</span>Reports With No Staff Coverage</h3>
+    <p class="helper-text">
+      These reports' category + ward has no active staff assigned, so they're
+      invisible in every staff dashboard. Create a matching staff account
+      above to fix each one.
+    </p>
+    <table class="data-table" id="unassigned-table">
+      <thead>
+        <tr><th>Category</th><th>Ward</th><th>Landmark</th><th>Status</th><th>Reported</th></tr>
+      </thead>
+      <tbody id="unassigned-table-body">
+        <tr><td colspan="5"><div class="spinner-center" style="padding:16px 0;"><div class="spinner"></div></div></td></tr>
       </tbody>
     </table>
   </div>
@@ -87,7 +111,7 @@
   E-Governance Laboratory Project — Tribhuvan University
 </footer>
 
-<script src="js/api.js?v=4"></script>
+<script src="js/api.js?v=8"></script>
 <script src="js/auth.js?v=8"></script>
 <script>
   requireAdminLogin();
@@ -115,6 +139,17 @@
   const errorEl = document.getElementById("error-box");
   const successEl = document.getElementById("success-box");
   const tableBody = document.getElementById("staff-table-body");
+  const statsEl = document.getElementById("stats-row");
+  let lastCounts = { staff: 0, citizens: 0, unassigned: 0 };
+
+  function renderStats() {
+    statsEl.innerHTML = `
+      <div class="stat-pill accent-blue"><span class="stat-icon">👮</span><div><span class="stat-num">${lastCounts.staff}</span><span class="stat-label">Staff Accounts</span></div></div>
+      <div class="stat-pill accent-green"><span class="stat-icon">🧑‍🤝‍🧑</span><div><span class="stat-num">${lastCounts.citizens}</span><span class="stat-label">Citizens</span></div></div>
+      <div class="stat-pill accent-orange"><span class="stat-icon">⚠️</span><div><span class="stat-num">${lastCounts.unassigned}</span><span class="stat-label">Uncovered Reports</span></div></div>
+    `;
+    animateCardsIn(statsEl);
+  }
 
   function escapeHtml(str) {
     const div = document.createElement("div");
@@ -131,6 +166,8 @@
   async function loadStaff() {
     try {
       const staffList = await apiFetch("/admin/staff", { authKind: "staff" });
+      lastCounts.staff = staffList.length;
+      renderStats();
       if (staffList.length === 0) {
         tableBody.innerHTML = `<tr><td colspan="8">No staff accounts yet.</td></tr>`;
         return;
@@ -141,7 +178,7 @@
         <tr>
           <td>${escapeHtml(s.full_name)}</td>
           <td>${escapeHtml(s.email)}</td>
-          <td>${s.role}</td>
+          <td><span class="role-chip ${s.role}">${s.role === "admin" ? "🛡️ Admin" : "👮 Staff"}</span></td>
           <td>${s.category ? categoryLabel(s.category) : "—"}</td>
           <td>${s.ward_no ?? "—"}</td>
           <td>${formatDate(s.created_at)}</td>
@@ -156,6 +193,7 @@
         )
         .join("");
 
+      animateCardsIn(tableBody, "tr");
       tableBody.querySelectorAll("[data-staff-toggle]").forEach((btn) => {
         btn.addEventListener("click", () => toggleStaff(btn));
       });
@@ -178,6 +216,7 @@
       await apiFetch(`/admin/staff/${id}/${action}`, { method: "PATCH", authKind: "staff" });
       showBox(successEl, `Staff account ${action === "disable" ? "removed" : "re-enabled"}.`);
       loadStaff();
+      loadUnassigned();
     } catch (err) {
       showBox(errorEl, err.message);
       setButtonLoading(btn, false);
@@ -189,8 +228,10 @@
   async function loadCitizens() {
     try {
       const citizens = await apiFetch("/admin/citizens", { authKind: "staff" });
+      lastCounts.citizens = citizens.length;
+      renderStats();
       if (citizens.length === 0) {
-        citizensTableBody.innerHTML = `<tr><td colspan="6">No citizens registered yet.</td></tr>`;
+        citizensTableBody.innerHTML = `<tr><td colspan="7">No citizens registered yet.</td></tr>`;
         return;
       }
       citizensTableBody.innerHTML = citizens
@@ -200,18 +241,46 @@
           <td>${escapeHtml(c.full_name)}</td>
           <td>${escapeHtml(c.email)}</td>
           <td>${escapeHtml(c.phone)}</td>
+          <td>${escapeHtml(c.citizenship_number) || "—"}</td>
           <td>${formatDate(c.created_at)}</td>
           <td>${statusBadge(c.disabled)}</td>
-          <td><button type="button" class="btn small ${c.disabled ? "" : "reject"}" data-citizen-toggle="${c.id}" data-disabled="${c.disabled}">${c.disabled ? "Re-enable" : "Disable"}</button></td>
+          <td>
+            <div class="actions-row">
+              ${c.has_citizenship_photo ? `<button type="button" class="btn small secondary" data-citizen-id-photo="${c.id}">🪪 View ID</button>` : ""}
+              <button type="button" class="btn small ${c.disabled ? "" : "reject"}" data-citizen-toggle="${c.id}" data-disabled="${c.disabled}">${c.disabled ? "Re-enable" : "Disable"}</button>
+            </div>
+          </td>
         </tr>`
         )
         .join("");
 
+      animateCardsIn(citizensTableBody, "tr");
       citizensTableBody.querySelectorAll("[data-citizen-toggle]").forEach((btn) => {
         btn.addEventListener("click", () => toggleCitizen(btn));
       });
+      citizensTableBody.querySelectorAll("[data-citizen-id-photo]").forEach((btn) => {
+        btn.addEventListener("click", () => viewCitizenshipPhoto(btn));
+      });
     } catch (err) {
       showBox(errorEl, err.message);
+    }
+  }
+
+  async function viewCitizenshipPhoto(btn) {
+    const id = btn.dataset.citizenIdPhoto;
+    setButtonLoading(btn, true);
+    try {
+      const token = getToken("staff");
+      const res = await fetch(`${API_BASE_URL}/admin/citizens/${id}/citizenship-photo`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Could not load citizenship photo.");
+      const blob = await res.blob();
+      window.open(URL.createObjectURL(blob), "_blank");
+    } catch (err) {
+      showBox(errorEl, err.message);
+    } finally {
+      setButtonLoading(btn, false);
     }
   }
 
@@ -232,6 +301,35 @@
     } catch (err) {
       showBox(errorEl, err.message);
       setButtonLoading(btn, false);
+    }
+  }
+
+  const unassignedTableBody = document.getElementById("unassigned-table-body");
+
+  async function loadUnassigned() {
+    try {
+      const reports = await apiFetch("/admin/reports/unassigned", { authKind: "staff" });
+      lastCounts.unassigned = reports.length;
+      renderStats();
+      if (reports.length === 0) {
+        unassignedTableBody.innerHTML = `<tr><td colspan="5">None — every report has a matching staff member. 🎉</td></tr>`;
+        return;
+      }
+      unassignedTableBody.innerHTML = reports
+        .map(
+          (r) => `
+        <tr>
+          <td>${categoryLabel(r.category)}</td>
+          <td>${r.ward_no}</td>
+          <td>${escapeHtml(r.landmark)}</td>
+          <td><span class="badge ${r.status}">${statusLabel(r.status)}</span></td>
+          <td>${formatDate(r.created_at)}</td>
+        </tr>`
+        )
+        .join("");
+      animateCardsIn(unassignedTableBody, "tr");
+    } catch (err) {
+      showBox(errorEl, err.message);
     }
   }
 
@@ -261,6 +359,7 @@
       form.reset();
       staffOnlyFields.style.display = "block";
       loadStaff();
+      loadUnassigned();
     } catch (err) {
       showBox(errorEl, err.message);
     } finally {
@@ -270,6 +369,7 @@
 
   loadStaff();
   loadCitizens();
+  loadUnassigned();
 </script>
 </body>
 </html>

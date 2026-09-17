@@ -1,13 +1,15 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.staff import Staff
 from app.models.citizen import Citizen
+from app.models.report import Report
 from app.schemas.staff import StaffCreate, StaffOut
 from app.schemas.citizen import CitizenAdminOut
+from app.schemas.report import UnassignedReportOut
 from app.auth.security import hash_password
 from app.auth.dependencies import require_admin
 
@@ -106,6 +108,25 @@ def disable_citizen(
     return citizen
 
 
+@router.get("/citizens/{citizen_id}/citizenship-photo")
+def citizen_citizenship_photo(
+    citizen_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    _admin: Staff = Depends(require_admin),
+):
+    """
+    Admin-only — the citizenship card photo captured at registration, used to
+    manually cross-check identity. Never exposed to any other role.
+    """
+    citizen = db.query(Citizen).filter(Citizen.id == citizen_id).first()
+    if not citizen or not citizen.citizenship_photo_data:
+        raise HTTPException(status_code=404, detail="No citizenship photo on file.")
+    return Response(
+        content=citizen.citizenship_photo_data,
+        media_type=citizen.citizenship_photo_content_type or "image/jpeg",
+    )
+
+
 @router.patch("/citizens/{citizen_id}/enable", response_model=CitizenAdminOut)
 def enable_citizen(
     citizen_id: uuid.UUID,
@@ -121,3 +142,19 @@ def enable_citizen(
     db.commit()
     db.refresh(citizen)
     return citizen
+
+
+@router.get("/reports/unassigned", response_model=list[UnassignedReportOut])
+def unassigned_reports(db: Session = Depends(get_db), _admin: Staff = Depends(require_admin)):
+    """
+    Reports with no active (non-disabled) staff member covering their exact
+    category+ward — invisible to every staff dashboard until someone is
+    assigned there. Read-only: admin still can't verify/reject/etc these.
+    """
+    active_pairs = set(
+        db.query(Staff.category, Staff.ward_no)
+        .filter(Staff.role == "staff", Staff.disabled.is_(False))
+        .all()
+    )
+    reports = db.query(Report).order_by(Report.created_at.desc()).all()
+    return [r for r in reports if (r.category, r.ward_no) not in active_pairs]

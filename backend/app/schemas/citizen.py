@@ -1,14 +1,8 @@
 import uuid
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
-
-
-class CitizenRegister(BaseModel):
-    full_name: str = Field(min_length=2, max_length=150)
-    email: EmailStr
-    phone: str = Field(min_length=6, max_length=20)
-    password: str = Field(min_length=8, max_length=100)
 
 
 class CitizenLogin(BaseModel):
@@ -45,5 +39,7 @@ class CitizenAdminOut(BaseModel):
     full_name: str
     email: EmailStr
     phone: str
+    citizenship_number: Optional[str] = None
+    has_citizenship_photo: bool
     disabled: bool
     created_at: datetime

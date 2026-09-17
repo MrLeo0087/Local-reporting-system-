@@ -1,9 +1,10 @@
 """
 Reusable FastAPI dependencies for protecting routes:
 - get_current_citizen
-- get_current_staff   (any staff member, including admins)
-- require_staff_only  (department staff only — not admins)
-- require_admin       (admins only)
+- get_current_staff        (any staff member, including admins)
+- require_staff_only       (department staff only — not admins)
+- require_admin            (admins only)
+- get_current_citizen_or_staff  (either — for the report message thread)
 """
 import uuid
 
@@ -96,3 +97,39 @@ def require_admin(staff: Staff = Depends(get_current_staff)) -> Staff:
             detail="This action requires an admin account.",
         )
     return staff
+
+
+# Either scheme extracts the bearer token the same way regardless of which
+# tokenUrl it was declared with — that field only affects the "Authorize"
+# button in /docs, so reusing citizen_oauth2_scheme here is fine.
+def get_current_citizen_or_staff(
+    token: str = Depends(citizen_oauth2_scheme), db: Session = Depends(get_db)
+) -> tuple[str, "Citizen | Staff"]:
+    """
+    For the report message thread, which either the reporting citizen or the
+    assigned staff member may read/post to. Returns ("citizen", Citizen) or
+    ("staff", Staff) — the caller still has to check the citizen owns the
+    report, or the staff's category/ward matches it.
+    """
+    if not token:
+        raise CREDENTIALS_EXCEPTION
+    payload = decode_access_token(token)
+    role = payload.get("role") if payload else None
+    if role not in ("citizen", "staff", "admin"):
+        raise CREDENTIALS_EXCEPTION
+
+    try:
+        user_id = uuid.UUID(payload.get("sub"))
+    except (TypeError, ValueError):
+        raise CREDENTIALS_EXCEPTION
+
+    if role == "citizen":
+        citizen = db.query(Citizen).filter(Citizen.id == user_id).first()
+        if citizen is None or citizen.disabled:
+            raise CREDENTIALS_EXCEPTION
+        return ("citizen", citizen)
+
+    staff = db.query(Staff).filter(Staff.id == user_id).first()
+    if staff is None or staff.disabled:
+        raise CREDENTIALS_EXCEPTION
+    return ("staff", staff)

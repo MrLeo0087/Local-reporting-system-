@@ -5,7 +5,7 @@
 <script>(function(){var t=localStorage.getItem("theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Citizen Login — Local Civic Problem Reporting System</title>
-<link rel="stylesheet" href="css/style.css?v=3" />
+<link rel="stylesheet" href="css/style.css?v=9" />
 </head>
 <body>
 
@@ -14,28 +14,40 @@
   <nav id="nav-links"></nav>
 </header>
 
-<main>
-  <div class="card form-card">
-    <h1>Citizen Login</h1>
-    <p class="subtitle">Log in to report a problem or check your reports.</p>
+<main class="auth-shell">
+  <div class="auth-visual">
+    <div class="auth-visual-icon">🏙️</div>
+    <h2>Report it. Track it. See it fixed.</h2>
+    <p>Log back in to check the live status of everything you've reported — no more wondering what happened after you filed it.</p>
+    <div class="auth-visual-points">
+      <span>📸 Photo + location, filed in under a minute</span>
+      <span>📍 Auto-routed to the right department</span>
+      <span>🔔 Full status history, every step tracked</span>
+    </div>
+  </div>
+  <div class="auth-form-panel">
+    <div class="card form-card">
+      <h1>Citizen Login</h1>
+      <p class="subtitle">Log in to report a problem or check your reports.</p>
 
-    <div id="error-box" class="error-box"></div>
+      <div id="error-box" class="error-box"></div>
 
-    <form id="login-form">
-      <label for="email">Email</label>
-      <input type="email" id="email" required />
+      <form id="login-form">
+        <label for="email">Email</label>
+        <input type="email" id="email" required />
 
-      <label for="password">Password</label>
-      <div class="password-field">
-        <input type="password" id="password" required />
-        <button type="button" class="password-toggle" data-target="password" aria-label="Show password">👁</button>
-      </div>
+        <label for="password">Password</label>
+        <div class="password-field">
+          <input type="password" id="password" required />
+          <button type="button" class="password-toggle" data-target="password" aria-label="Show password">👁</button>
+        </div>
 
-      <button type="submit" class="btn">Log In</button>
-    </form>
+        <button type="submit" class="btn" style="width:100%;">Log In</button>
+      </form>
 
-    <p style="margin-top:16px;">Don't have an account? <a href="register.html">Register</a></p>
-    <p><a href="staff-login.html">Staff / Admin login</a></p>
+      <p style="margin-top:16px;">Don't have an account? <a href="register.html">Register</a></p>
+      <p><a href="staff-login.html">Staff / Admin login</a></p>
+    </div>
   </div>
 </main>
 
@@ -43,7 +55,7 @@
   E-Governance Laboratory Project — Tribhuvan University
 </footer>
 
-<script src="js/api.js?v=4"></script>
+<script src="js/api.js?v=8"></script>
 <script src="js/auth.js?v=8"></script>
 <script>
   if (!redirectIfAlreadyLoggedInAsCitizen()) {
