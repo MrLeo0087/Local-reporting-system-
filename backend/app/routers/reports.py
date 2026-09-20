@@ -13,7 +13,7 @@ from app.models.status_log import StatusLog
 from app.models.message import Message
 from app.models.staff import STAFF_CATEGORIES
 from app.schemas.report import ReportOut, ReportDetailOut, ReportAdminUpdate
-from app.auth.dependencies import get_current_citizen
+from app.auth.dependencies import get_current_citizen, get_optional_actor
 from app.utils.uploads import process_report_photo
 from app.utils.fake_report_lock import check_not_locked
 
@@ -219,7 +219,11 @@ def delete_my_report(
 
 
 @router.get("/reports/{report_id}", response_model=ReportDetailOut)
-def report_detail(report_id: uuid.UUID, db: Session = Depends(get_db)):
+def report_detail(
+    report_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    actor: Optional[tuple] = Depends(get_optional_actor),
+):
     report = (
         db.query(Report)
         .options(joinedload(Report.citizen), joinedload(Report.status_logs))
@@ -229,5 +233,19 @@ def report_detail(report_id: uuid.UUID, db: Session = Depends(get_db)):
     if not report:
         raise HTTPException(status_code=404, detail="Report not found.")
 
+    # "Anonymous" is a public-feed courtesy toward other citizens, not a
+    # shield from staff or the reporter's own view of their own report —
+    # staff need the real identity to act responsibly (and to stop the
+    # anonymity option being abused to submit bad-faith reports consequence-free).
+    reveal_real_name = False
+    if actor:
+        kind, user = actor
+        if kind == "staff":
+            reveal_real_name = True
+        elif kind == "citizen" and user.id == report.citizen_id:
+            reveal_real_name = True
+
     base = _to_report_out(report)
+    if reveal_real_name:
+        base.reporter_name = report.citizen.full_name
     return ReportDetailOut(**base.model_dump(), status_logs=report.status_logs)

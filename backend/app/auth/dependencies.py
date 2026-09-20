@@ -133,3 +133,40 @@ def get_current_citizen_or_staff(
     if staff is None or staff.disabled:
         raise CREDENTIALS_EXCEPTION
     return ("staff", staff)
+
+
+def get_optional_actor(
+    citizen_token: str = Depends(citizen_oauth2_scheme),
+    staff_token: str = Depends(staff_oauth2_scheme),
+    db: Session = Depends(get_db),
+) -> "tuple[str, Citizen | Staff] | None":
+    """
+    For endpoints that are public but behave differently for a logged-in
+    viewer (e.g. report_detail revealing the real reporter name to staff or
+    the report's own citizen even when it's posted anonymously). Never
+    raises — an absent, expired, or otherwise invalid token just means an
+    anonymous/public viewer, exactly like having no token at all.
+    """
+    token = citizen_token or staff_token
+    if not token:
+        return None
+
+    payload = decode_access_token(token)
+    if not payload:
+        return None
+
+    try:
+        user_id = uuid.UUID(payload.get("sub"))
+    except (TypeError, ValueError):
+        return None
+
+    role = payload.get("role")
+    if role == "citizen":
+        citizen = db.query(Citizen).filter(Citizen.id == user_id).first()
+        return ("citizen", citizen) if citizen and not citizen.disabled else None
+
+    if role in ("staff", "admin"):
+        staff = db.query(Staff).filter(Staff.id == user_id).first()
+        return ("staff", staff) if staff and not staff.disabled else None
+
+    return None

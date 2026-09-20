@@ -66,7 +66,12 @@
 
     container.innerHTML = spinnerHtml();
     try {
-      const r = await apiFetch(`/reports/${id}`);
+      // Sending whichever token is present (if any) lets the backend reveal
+      // the real reporter name to staff or to the citizen viewing their own
+      // report, instead of always showing "Anonymous Citizen" the way the
+      // truly public/logged-out view of this page should.
+      const viewerAuthKind = getToken("staff") ? "staff" : getToken("citizen") ? "citizen" : null;
+      const r = await apiFetch(`/reports/${id}`, viewerAuthKind ? { authKind: viewerAuthKind } : {});
       const initial = (r.reporter_name || "?").trim().charAt(0).toUpperCase();
       container.innerHTML = `
         <div class="card" style="display:flex;align-items:center;gap:12px;">
@@ -117,10 +122,21 @@
 
       animateCardsIn(container, ".card");
       loadMessages(id);
+      startMessagePolling(id);
     } catch (err) {
       showBox(errorEl, err.message);
       container.innerHTML = "";
     }
+  }
+
+  let messagePollTimer = null;
+
+  // The other party's messages otherwise only ever show up after a manual
+  // page reload — polling here is a lot simpler than adding websockets for
+  // what's a small local system, and frequent enough that it feels live.
+  function startMessagePolling(reportId) {
+    if (messagePollTimer) clearInterval(messagePollTimer);
+    messagePollTimer = setInterval(() => loadMessages(reportId), 4000);
   }
 
   function messageBubbleHtml(m) {
@@ -153,11 +169,19 @@
 
     try {
       const messages = await apiFetch(`/reports/${reportId}/messages`, { authKind });
+      // A background poll re-renders this on a timer — if someone has
+      // scrolled up to read older messages, don't yank them back down to
+      // the bottom every 4 seconds. Only auto-scroll if they were already
+      // there (or this is the first render).
+      const wasNearBottom =
+        threadEl.childElementCount === 0 ||
+        threadEl.scrollTop + threadEl.clientHeight >= threadEl.scrollHeight - 40;
+
       messagesCard.style.display = "block";
       threadEl.innerHTML = messages.length
         ? messages.map(messageBubbleHtml).join("")
         : `<p class="empty-state" style="padding:16px 0;">No messages yet — say hello.</p>`;
-      threadEl.scrollTop = threadEl.scrollHeight;
+      if (wasNearBottom) threadEl.scrollTop = threadEl.scrollHeight;
 
       const form = document.getElementById("message-form");
       form.onsubmit = async (e) => {
