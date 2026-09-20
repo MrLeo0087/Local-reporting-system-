@@ -42,18 +42,18 @@ switching needed.
 This deploys as **two** separate Render services:
 
 1. **Backend — Web Service**
+
    - Root directory: `backend`
    - Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
    - Add a Render PostgreSQL database (or keep Neon/Supabase) and set
      `DATABASE_URL`, `JWT_SECRET_KEY`, and the other vars from `.env.example`
      in the Render dashboard.
    - Once deployed, note its URL (e.g. `https://your-api.onrender.com`).
-
 2. **Frontend — Static Site**
+
    - Root directory: `frontend`
    - Open `frontend/js/api.js` and set `RENDER_API_BASE_URL` at the top to
      the backend URL from step 1, then commit and deploy.
-
 3. Back on the backend service, set `CORS_ORIGINS` to include your
    frontend's Render URL, so the deployed frontend is allowed to call it.
 
