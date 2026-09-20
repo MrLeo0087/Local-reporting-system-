@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.citizen import Citizen
-from app.schemas.citizen import CitizenLogin, CitizenOut, TokenOut
+from app.schemas.citizen import CitizenLogin, CitizenOut, TokenOut, CitizenUpdate
 from app.auth.security import hash_password, verify_password, create_access_token
 from app.auth.dependencies import get_current_citizen
 from app.utils.uploads import process_report_photo
@@ -73,4 +73,29 @@ def login(payload: CitizenLogin, db: Session = Depends(get_db)):
 
 @router.get("/me", response_model=CitizenOut)
 def read_me(current_citizen: Citizen = Depends(get_current_citizen)):
+    return current_citizen
+
+
+@router.patch("/me", response_model=CitizenOut)
+def update_me(
+    payload: CitizenUpdate,
+    db: Session = Depends(get_db),
+    current_citizen: Citizen = Depends(get_current_citizen),
+):
+    if payload.email is not None and payload.email != current_citizen.email:
+        existing = db.query(Citizen).filter(Citizen.email == payload.email).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="An account with this email already exists.")
+        current_citizen.email = payload.email
+
+    if payload.full_name is not None:
+        current_citizen.full_name = payload.full_name
+    if payload.phone is not None:
+        current_citizen.phone = payload.phone
+    if payload.password is not None:
+        current_citizen.password_hash = hash_password(payload.password)
+
+    db.add(current_citizen)
+    db.commit()
+    db.refresh(current_citizen)
     return current_citizen

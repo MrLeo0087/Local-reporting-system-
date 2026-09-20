@@ -33,6 +33,25 @@ class StaffCreate(BaseModel):
         return self
 
 
+class StaffUpdate(BaseModel):
+    full_name: Optional[str] = Field(default=None, min_length=2, max_length=150)
+    email: Optional[EmailStr] = None
+    password: Optional[str] = Field(default=None, min_length=8, max_length=100)
+    role: Optional[str] = None
+    category: Optional[str] = None
+    ward_no: Optional[int] = None
+
+    @model_validator(mode="after")
+    def validate_role_specific_fields(self):
+        if self.role is not None and self.role not in STAFF_ROLES:
+            raise ValueError(f"role must be one of {STAFF_ROLES}")
+
+        if self.role == "staff":
+            if self.category is not None and self.category not in STAFF_CATEGORIES:
+                raise ValueError(f"category must be one of {STAFF_CATEGORIES}")
+        return self
+
+
 class StaffOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

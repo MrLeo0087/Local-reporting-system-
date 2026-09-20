@@ -5,7 +5,7 @@
 <script>(function(){var t=localStorage.getItem("theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Staff Dashboard — Local Civic Problem Reporting System</title>
-<link rel="stylesheet" href="css/style.css?v=9" />
+<link rel="stylesheet" href="css/style.css?v=10" />
 </head>
 <body>
 
@@ -13,6 +13,7 @@
   <a class="brand" href="index.html"><span class="brand-icon">🏙️</span>Civic Problem Reporting</a>
   <nav>
     <a href="feed.html">Public Feed</a>
+    <span id="whoami-badge" class="whoami-badge"></span>
     <button id="logout-btn">Log out</button>
     <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode"></button>
   </nav>
@@ -34,9 +35,10 @@
 </footer>
 
 <script src="js/api.js?v=8"></script>
-<script src="js/auth.js?v=8"></script>
+<script src="js/auth.js?v=9"></script>
 <script>
   requireStaffOnlyLogin();
+  renderWhoAmI();
 
   document.getElementById("logout-btn").addEventListener("click", () => {
     clearToken("staff");

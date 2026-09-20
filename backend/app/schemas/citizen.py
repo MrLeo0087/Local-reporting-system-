@@ -30,6 +30,13 @@ class TokenOut(BaseModel):
     role: str
 
 
+class CitizenUpdate(BaseModel):
+    full_name: Optional[str] = Field(default=None, min_length=2, max_length=150)
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = Field(default=None, min_length=6, max_length=20)
+    password: Optional[str] = Field(default=None, min_length=8, max_length=100)
+
+
 class CitizenAdminOut(BaseModel):
     """Admin-only view of a citizen — includes fields CitizenOut deliberately hides."""
 

@@ -43,6 +43,7 @@ function renderCitizenHeader(activePage) {
     .join("");
 
   if (staffToken || citizenToken) {
+    html += `<span id="whoami-badge" class="whoami-badge"></span>`;
     html += `<button type="button" data-logout-btn>Log out</button>`;
   }
   if (!staffToken) {
@@ -62,6 +63,39 @@ function renderCitizenHeader(activePage) {
       clearToken(staffToken ? "staff" : "citizen");
       window.location.href = "index.html";
     });
+  }
+
+  renderWhoAmI();
+}
+
+/**
+ * Shows "Logged in as <name> (<role>)" wherever a #whoami-badge element
+ * exists in the page's header — the shared nav (see renderCitizenHeader)
+ * or a static dashboard header. Only a bare token/role was ever kept in
+ * localStorage, so this fetches the actual profile from /citizens/me or
+ * /staff/me rather than guessing from the stored role string.
+ */
+async function renderWhoAmI() {
+  const el = document.getElementById("whoami-badge");
+  if (!el) return;
+
+  const staffToken = getToken("staff");
+  const citizenToken = getToken("citizen");
+  if (!staffToken && !citizenToken) {
+    el.textContent = "";
+    return;
+  }
+
+  try {
+    if (staffToken) {
+      const me = await apiFetch("/staff/me", { authKind: "staff" });
+      el.textContent = `Logged in as ${me.full_name} (${me.role === "admin" ? "Admin" : "Staff"})`;
+    } else {
+      const me = await apiFetch("/citizens/me", { authKind: "citizen" });
+      el.textContent = `Logged in as ${me.full_name}`;
+    }
+  } catch (err) {
+    el.textContent = "";
   }
 }
 

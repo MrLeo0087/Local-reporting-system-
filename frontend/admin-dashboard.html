@@ -5,7 +5,7 @@
 <script>(function(){var t=localStorage.getItem("theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Admin Dashboard — Local Civic Problem Reporting System</title>
-<link rel="stylesheet" href="css/style.css?v=9" />
+<link rel="stylesheet" href="css/style.css?v=10" />
 </head>
 <body>
 
@@ -13,6 +13,7 @@
   <a class="brand" href="index.html"><span class="brand-icon">🏙️</span>Civic Problem Reporting</a>
   <nav>
     <a href="feed.html">Public Feed</a>
+    <span id="whoami-badge" class="whoami-badge"></span>
     <button id="logout-btn">Log out</button>
     <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode"></button>
   </nav>
@@ -65,6 +66,46 @@
     </form>
   </div>
 
+  <div id="staff-edit-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-box card">
+      <h3><span class="section-icon">✏️</span>Edit Staff Account</h3>
+      <form id="staff-edit-form">
+        <input type="hidden" id="edit_staff_id" />
+
+        <label for="edit_full_name">Full name</label>
+        <input type="text" id="edit_full_name" required maxlength="150" />
+
+        <label for="edit_email">Email</label>
+        <input type="email" id="edit_email" required maxlength="150" />
+
+        <label for="edit_password">New password (leave blank to keep current)</label>
+        <div class="password-field">
+          <input type="password" id="edit_password" minlength="8" />
+          <button type="button" class="password-toggle" data-target="edit_password" aria-label="Show password">👁</button>
+        </div>
+
+        <label for="edit_role">Role</label>
+        <select id="edit_role">
+          <option value="staff">Staff</option>
+          <option value="admin">Admin</option>
+        </select>
+
+        <div id="edit-staff-only-fields">
+          <label for="edit_category">Category</label>
+          <select id="edit_category"></select>
+
+          <label for="edit_ward_no">Ward number</label>
+          <input type="number" id="edit_ward_no" min="1" />
+        </div>
+
+        <div class="actions-row">
+          <button type="submit" class="btn">💾 Save Changes</button>
+          <button type="button" class="btn small secondary" id="staff-edit-cancel">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <div class="card section-card accent-purple reveal">
     <h3><span class="section-icon">👮</span>Existing Staff Accounts</h3>
     <table class="data-table" id="staff-table">
@@ -75,6 +116,35 @@
         <tr><td colspan="8"><div class="spinner-center" style="padding:16px 0;"><div class="spinner"></div></div></td></tr>
       </tbody>
     </table>
+  </div>
+
+  <div id="citizen-edit-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-box card">
+      <h3><span class="section-icon">✏️</span>Edit Citizen Account</h3>
+      <form id="citizen-edit-form">
+        <input type="hidden" id="edit_citizen_id" />
+
+        <label for="edit_citizen_full_name">Full name</label>
+        <input type="text" id="edit_citizen_full_name" required maxlength="150" />
+
+        <label for="edit_citizen_email">Email</label>
+        <input type="email" id="edit_citizen_email" required maxlength="150" />
+
+        <label for="edit_citizen_phone">Phone</label>
+        <input type="text" id="edit_citizen_phone" required maxlength="20" />
+
+        <label for="edit_citizen_password">New password (leave blank to keep current)</label>
+        <div class="password-field">
+          <input type="password" id="edit_citizen_password" minlength="8" />
+          <button type="button" class="password-toggle" data-target="edit_citizen_password" aria-label="Show password">👁</button>
+        </div>
+
+        <div class="actions-row">
+          <button type="submit" class="btn">💾 Save Changes</button>
+          <button type="button" class="btn small secondary" id="citizen-edit-cancel">Cancel</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <div class="card section-card accent-green reveal">
@@ -105,6 +175,44 @@
       </tbody>
     </table>
   </div>
+
+  <div id="report-edit-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-box card">
+      <h3><span class="section-icon">✏️</span>Edit Report</h3>
+      <form id="report-edit-form">
+        <input type="hidden" id="edit_report_id" />
+
+        <label for="edit_report_category">Category</label>
+        <select id="edit_report_category"></select>
+
+        <label for="edit_report_ward_no">Ward number</label>
+        <input type="number" id="edit_report_ward_no" min="1" required />
+
+        <label for="edit_report_landmark">Landmark</label>
+        <input type="text" id="edit_report_landmark" required maxlength="200" />
+
+        <label for="edit_report_description">Description</label>
+        <textarea id="edit_report_description" required rows="4"></textarea>
+
+        <div class="actions-row">
+          <button type="submit" class="btn">💾 Save Changes</button>
+          <button type="button" class="btn small secondary" id="report-edit-cancel">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card section-card accent-purple reveal">
+    <h3><span class="section-icon">📋</span>All Reports</h3>
+    <table class="data-table" id="reports-table">
+      <thead>
+        <tr><th>Reported by</th><th>Category</th><th>Ward</th><th>Landmark</th><th>Status</th><th>Reported</th><th></th></tr>
+      </thead>
+      <tbody id="reports-table-body">
+        <tr><td colspan="7"><div class="spinner-center" style="padding:16px 0;"><div class="spinner"></div></div></td></tr>
+      </tbody>
+    </table>
+  </div>
 </main>
 
 <footer class="site-footer">
@@ -112,9 +220,10 @@
 </footer>
 
 <script src="js/api.js?v=8"></script>
-<script src="js/auth.js?v=8"></script>
+<script src="js/auth.js?v=9"></script>
 <script>
   requireAdminLogin();
+  renderWhoAmI();
 
   document.getElementById("logout-btn").addEventListener("click", () => {
     clearToken("staff");
@@ -163,9 +272,12 @@
       : `<span class="badge completed">Active</span>`;
   }
 
+  let lastStaffList = [];
+
   async function loadStaff() {
     try {
       const staffList = await apiFetch("/admin/staff", { authKind: "staff" });
+      lastStaffList = staffList;
       lastCounts.staff = staffList.length;
       renderStats();
       if (staffList.length === 0) {
@@ -184,10 +296,14 @@
           <td>${formatDate(s.created_at)}</td>
           <td>${statusBadge(s.disabled)}</td>
           <td>
-            ${s.role === "admin"
-              ? `<span class="helper-text">—</span>`
-              : `<button type="button" class="btn small ${s.disabled ? "" : "reject"}" data-staff-toggle="${s.id}" data-disabled="${s.disabled}">${s.disabled ? "Re-enable" : "Remove"}</button>`
-            }
+            <div class="actions-row">
+              <button type="button" class="btn small secondary" data-staff-edit="${s.id}">✏️ Edit</button>
+              ${s.role === "admin"
+                ? ""
+                : `<button type="button" class="btn small ${s.disabled ? "" : "reject"}" data-staff-toggle="${s.id}" data-disabled="${s.disabled}">${s.disabled ? "Re-enable" : "Remove"}</button>`
+              }
+              <button type="button" class="btn small reject" data-staff-delete="${s.id}">🗑️ Delete</button>
+            </div>
           </td>
         </tr>`
         )
@@ -197,8 +313,109 @@
       tableBody.querySelectorAll("[data-staff-toggle]").forEach((btn) => {
         btn.addEventListener("click", () => toggleStaff(btn));
       });
+      tableBody.querySelectorAll("[data-staff-edit]").forEach((btn) => {
+        btn.addEventListener("click", () => openEditStaffModal(btn.dataset.staffEdit));
+      });
+      tableBody.querySelectorAll("[data-staff-delete]").forEach((btn) => {
+        btn.addEventListener("click", () => deleteStaff(btn));
+      });
     } catch (err) {
       showBox(errorEl, err.message);
+    }
+  }
+
+  const editModal = document.getElementById("staff-edit-modal");
+  const editForm = document.getElementById("staff-edit-form");
+  const editRoleSelect = document.getElementById("edit_role");
+  const editStaffOnlyFields = document.getElementById("edit-staff-only-fields");
+  const editCategorySelect = document.getElementById("edit_category");
+
+  CATEGORIES.forEach((c) => {
+    const opt = document.createElement("option");
+    opt.value = c.value;
+    opt.textContent = c.label;
+    editCategorySelect.appendChild(opt);
+  });
+
+  editRoleSelect.addEventListener("change", () => {
+    editStaffOnlyFields.style.display = editRoleSelect.value === "staff" ? "block" : "none";
+  });
+
+  function openEditStaffModal(id) {
+    const staff = lastStaffList.find((s) => s.id === id);
+    if (!staff) return;
+    document.getElementById("edit_staff_id").value = staff.id;
+    document.getElementById("edit_full_name").value = staff.full_name;
+    document.getElementById("edit_email").value = staff.email;
+    document.getElementById("edit_password").value = "";
+    editRoleSelect.value = staff.role;
+    editCategorySelect.value = staff.category || "";
+    document.getElementById("edit_ward_no").value = staff.ward_no ?? "";
+    editStaffOnlyFields.style.display = staff.role === "staff" ? "block" : "none";
+    showBox(errorEl, "");
+    showBox(successEl, "");
+    editModal.style.display = "flex";
+  }
+
+  function closeEditStaffModal() {
+    editModal.style.display = "none";
+  }
+
+  document.getElementById("staff-edit-cancel").addEventListener("click", closeEditStaffModal);
+  editModal.addEventListener("click", (e) => {
+    if (e.target === editModal) closeEditStaffModal();
+  });
+
+  editForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    showBox(errorEl, "");
+    showBox(successEl, "");
+
+    const id = document.getElementById("edit_staff_id").value;
+    const role = editRoleSelect.value;
+    const body = {
+      full_name: document.getElementById("edit_full_name").value.trim(),
+      email: document.getElementById("edit_email").value.trim(),
+      role,
+    };
+    const password = document.getElementById("edit_password").value;
+    if (password) body.password = password;
+    if (role === "staff") {
+      body.category = editCategorySelect.value;
+      body.ward_no = Number(document.getElementById("edit_ward_no").value);
+    }
+
+    const submitBtn = editForm.querySelector('button[type="submit"]');
+    setButtonLoading(submitBtn, true);
+    try {
+      await apiFetch(`/admin/staff/${id}`, { method: "PATCH", body, authKind: "staff" });
+      closeEditStaffModal();
+      showBox(successEl, "Staff account updated.");
+      loadStaff();
+      loadUnassigned();
+    } catch (err) {
+      showBox(errorEl, err.message);
+    } finally {
+      setButtonLoading(submitBtn, false);
+    }
+  });
+
+  async function deleteStaff(btn) {
+    const id = btn.dataset.staffDelete;
+    if (!confirm("Permanently delete this staff account? This cannot be undone — the account itself is gone for good, though their past actions stay in the report history.")) {
+      return;
+    }
+    showBox(errorEl, "");
+    showBox(successEl, "");
+    setButtonLoading(btn, true);
+    try {
+      await apiFetch(`/admin/staff/${id}`, { method: "DELETE", authKind: "staff" });
+      showBox(successEl, "Staff account permanently deleted.");
+      loadStaff();
+      loadUnassigned();
+    } catch (err) {
+      showBox(errorEl, err.message);
+      setButtonLoading(btn, false);
     }
   }
 
@@ -224,10 +441,12 @@
   }
 
   const citizensTableBody = document.getElementById("citizens-table-body");
+  let lastCitizensList = [];
 
   async function loadCitizens() {
     try {
       const citizens = await apiFetch("/admin/citizens", { authKind: "staff" });
+      lastCitizensList = citizens;
       lastCounts.citizens = citizens.length;
       renderStats();
       if (citizens.length === 0) {
@@ -247,7 +466,9 @@
           <td>
             <div class="actions-row">
               ${c.has_citizenship_photo ? `<button type="button" class="btn small secondary" data-citizen-id-photo="${c.id}">🪪 View ID</button>` : ""}
+              <button type="button" class="btn small secondary" data-citizen-edit="${c.id}">✏️ Edit</button>
               <button type="button" class="btn small ${c.disabled ? "" : "reject"}" data-citizen-toggle="${c.id}" data-disabled="${c.disabled}">${c.disabled ? "Re-enable" : "Disable"}</button>
+              <button type="button" class="btn small reject" data-citizen-delete="${c.id}">🗑️ Delete</button>
             </div>
           </td>
         </tr>`
@@ -261,8 +482,87 @@
       citizensTableBody.querySelectorAll("[data-citizen-id-photo]").forEach((btn) => {
         btn.addEventListener("click", () => viewCitizenshipPhoto(btn));
       });
+      citizensTableBody.querySelectorAll("[data-citizen-edit]").forEach((btn) => {
+        btn.addEventListener("click", () => openEditCitizenModal(btn.dataset.citizenEdit));
+      });
+      citizensTableBody.querySelectorAll("[data-citizen-delete]").forEach((btn) => {
+        btn.addEventListener("click", () => deleteCitizen(btn));
+      });
     } catch (err) {
       showBox(errorEl, err.message);
+    }
+  }
+
+  const citizenEditModal = document.getElementById("citizen-edit-modal");
+  const citizenEditForm = document.getElementById("citizen-edit-form");
+
+  function openEditCitizenModal(id) {
+    const citizen = lastCitizensList.find((c) => c.id === id);
+    if (!citizen) return;
+    document.getElementById("edit_citizen_id").value = citizen.id;
+    document.getElementById("edit_citizen_full_name").value = citizen.full_name;
+    document.getElementById("edit_citizen_email").value = citizen.email;
+    document.getElementById("edit_citizen_phone").value = citizen.phone;
+    document.getElementById("edit_citizen_password").value = "";
+    showBox(errorEl, "");
+    showBox(successEl, "");
+    citizenEditModal.style.display = "flex";
+  }
+
+  function closeEditCitizenModal() {
+    citizenEditModal.style.display = "none";
+  }
+
+  document.getElementById("citizen-edit-cancel").addEventListener("click", closeEditCitizenModal);
+  citizenEditModal.addEventListener("click", (e) => {
+    if (e.target === citizenEditModal) closeEditCitizenModal();
+  });
+
+  citizenEditForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    showBox(errorEl, "");
+    showBox(successEl, "");
+
+    const id = document.getElementById("edit_citizen_id").value;
+    const body = {
+      full_name: document.getElementById("edit_citizen_full_name").value.trim(),
+      email: document.getElementById("edit_citizen_email").value.trim(),
+      phone: document.getElementById("edit_citizen_phone").value.trim(),
+    };
+    const password = document.getElementById("edit_citizen_password").value;
+    if (password) body.password = password;
+
+    const submitBtn = citizenEditForm.querySelector('button[type="submit"]');
+    setButtonLoading(submitBtn, true);
+    try {
+      await apiFetch(`/admin/citizens/${id}`, { method: "PATCH", body, authKind: "staff" });
+      closeEditCitizenModal();
+      showBox(successEl, "Citizen account updated.");
+      loadCitizens();
+    } catch (err) {
+      showBox(errorEl, err.message);
+    } finally {
+      setButtonLoading(submitBtn, false);
+    }
+  });
+
+  async function deleteCitizen(btn) {
+    const id = btn.dataset.citizenDelete;
+    if (!confirm("Permanently delete this citizen account? This cannot be undone, and it also deletes every report they've ever submitted.")) {
+      return;
+    }
+    showBox(errorEl, "");
+    showBox(successEl, "");
+    setButtonLoading(btn, true);
+    try {
+      await apiFetch(`/admin/citizens/${id}`, { method: "DELETE", authKind: "staff" });
+      showBox(successEl, "Citizen account permanently deleted.");
+      loadCitizens();
+      loadUnassigned();
+      loadReports();
+    } catch (err) {
+      showBox(errorEl, err.message);
+      setButtonLoading(btn, false);
     }
   }
 
@@ -333,6 +633,129 @@
     }
   }
 
+  const reportsTableBody = document.getElementById("reports-table-body");
+  let lastReportsList = [];
+
+  async function loadReports() {
+    try {
+      const reports = await apiFetch("/admin/reports", { authKind: "staff" });
+      lastReportsList = reports;
+      if (reports.length === 0) {
+        reportsTableBody.innerHTML = `<tr><td colspan="7">No reports submitted yet.</td></tr>`;
+        return;
+      }
+      reportsTableBody.innerHTML = reports
+        .map(
+          (r) => `
+        <tr>
+          <td>${escapeHtml(r.reporter_name)}</td>
+          <td>${categoryLabel(r.category)}</td>
+          <td>${r.ward_no}</td>
+          <td>${escapeHtml(r.landmark)}</td>
+          <td><span class="badge ${r.status}">${statusLabel(r.status)}</span></td>
+          <td>${formatDate(r.created_at)}</td>
+          <td>
+            <div class="actions-row">
+              <button type="button" class="btn small secondary" data-report-edit="${r.id}">✏️ Edit</button>
+              <button type="button" class="btn small reject" data-report-delete="${r.id}">🗑️ Delete</button>
+            </div>
+          </td>
+        </tr>`
+        )
+        .join("");
+
+      animateCardsIn(reportsTableBody, "tr");
+      reportsTableBody.querySelectorAll("[data-report-edit]").forEach((btn) => {
+        btn.addEventListener("click", () => openEditReportModal(btn.dataset.reportEdit));
+      });
+      reportsTableBody.querySelectorAll("[data-report-delete]").forEach((btn) => {
+        btn.addEventListener("click", () => deleteReport(btn));
+      });
+    } catch (err) {
+      showBox(errorEl, err.message);
+    }
+  }
+
+  const reportEditModal = document.getElementById("report-edit-modal");
+  const reportEditForm = document.getElementById("report-edit-form");
+  const reportEditCategorySelect = document.getElementById("edit_report_category");
+
+  CATEGORIES.forEach((c) => {
+    const opt = document.createElement("option");
+    opt.value = c.value;
+    opt.textContent = c.label;
+    reportEditCategorySelect.appendChild(opt);
+  });
+
+  function openEditReportModal(id) {
+    const report = lastReportsList.find((r) => r.id === id);
+    if (!report) return;
+    document.getElementById("edit_report_id").value = report.id;
+    reportEditCategorySelect.value = report.category;
+    document.getElementById("edit_report_ward_no").value = report.ward_no;
+    document.getElementById("edit_report_landmark").value = report.landmark;
+    document.getElementById("edit_report_description").value = report.description;
+    showBox(errorEl, "");
+    showBox(successEl, "");
+    reportEditModal.style.display = "flex";
+  }
+
+  function closeEditReportModal() {
+    reportEditModal.style.display = "none";
+  }
+
+  document.getElementById("report-edit-cancel").addEventListener("click", closeEditReportModal);
+  reportEditModal.addEventListener("click", (e) => {
+    if (e.target === reportEditModal) closeEditReportModal();
+  });
+
+  reportEditForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    showBox(errorEl, "");
+    showBox(successEl, "");
+
+    const id = document.getElementById("edit_report_id").value;
+    const body = {
+      category: reportEditCategorySelect.value,
+      ward_no: Number(document.getElementById("edit_report_ward_no").value),
+      landmark: document.getElementById("edit_report_landmark").value.trim(),
+      description: document.getElementById("edit_report_description").value.trim(),
+    };
+
+    const submitBtn = reportEditForm.querySelector('button[type="submit"]');
+    setButtonLoading(submitBtn, true);
+    try {
+      await apiFetch(`/admin/reports/${id}`, { method: "PATCH", body, authKind: "staff" });
+      closeEditReportModal();
+      showBox(successEl, "Report updated.");
+      loadReports();
+      loadUnassigned();
+    } catch (err) {
+      showBox(errorEl, err.message);
+    } finally {
+      setButtonLoading(submitBtn, false);
+    }
+  });
+
+  async function deleteReport(btn) {
+    const id = btn.dataset.reportDelete;
+    if (!confirm("Permanently delete this report? This cannot be undone.")) {
+      return;
+    }
+    showBox(errorEl, "");
+    showBox(successEl, "");
+    setButtonLoading(btn, true);
+    try {
+      await apiFetch(`/admin/reports/${id}`, { method: "DELETE", authKind: "staff" });
+      showBox(successEl, "Report permanently deleted.");
+      loadReports();
+      loadUnassigned();
+    } catch (err) {
+      showBox(errorEl, err.message);
+      setButtonLoading(btn, false);
+    }
+  }
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     showBox(errorEl, "");
@@ -370,6 +793,7 @@
   loadStaff();
   loadCitizens();
   loadUnassigned();
+  loadReports();
 </script>
 </body>
 </html>

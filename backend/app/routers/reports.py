@@ -10,8 +10,9 @@ from app.database import get_db
 from app.models.citizen import Citizen
 from app.models.report import Report, REPORT_STATUSES
 from app.models.status_log import StatusLog
+from app.models.message import Message
 from app.models.staff import STAFF_CATEGORIES
-from app.schemas.report import ReportOut, ReportDetailOut
+from app.schemas.report import ReportOut, ReportDetailOut, ReportAdminUpdate
 from app.auth.dependencies import get_current_citizen
 from app.utils.uploads import process_report_photo
 from app.utils.fake_report_lock import check_not_locked
@@ -152,6 +153,69 @@ def my_reports(
         .all()
     )
     return [_to_report_out(r) for r in reports]
+
+
+@router.patch("/reports/{report_id}", response_model=ReportOut)
+def update_my_report(
+    report_id: uuid.UUID,
+    payload: ReportAdminUpdate,
+    db: Session = Depends(get_db),
+    citizen: Citizen = Depends(get_current_citizen),
+):
+    report = (
+        db.query(Report)
+        .options(joinedload(Report.citizen))
+        .filter(Report.id == report_id, Report.citizen_id == citizen.id)
+        .first()
+    )
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found.")
+
+    # Editing is only safe while staff haven't acted on it yet — once
+    # verified/rejected/etc, staff have already read and started acting on
+    # what was submitted, so changing it out from under them isn't allowed.
+    if report.status != "submitted":
+        raise HTTPException(
+            status_code=400,
+            detail="This report has already been reviewed by staff and can no longer be edited.",
+        )
+
+    if payload.category is not None:
+        report.category = payload.category
+    if payload.ward_no is not None:
+        report.ward_no = payload.ward_no
+    if payload.landmark is not None:
+        report.landmark = payload.landmark
+    if payload.description is not None:
+        report.description = payload.description
+
+    db.add(report)
+    db.commit()
+    db.refresh(report)
+    return _to_report_out(report)
+
+
+@router.delete("/reports/{report_id}", status_code=204)
+def delete_my_report(
+    report_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    citizen: Citizen = Depends(get_current_citizen),
+):
+    report = db.query(Report).filter(Report.id == report_id, Report.citizen_id == citizen.id).first()
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found.")
+
+    if report.status != "submitted":
+        raise HTTPException(
+            status_code=400,
+            detail="This report has already been reviewed by staff and can no longer be deleted.",
+        )
+
+    db.query(Message).filter(Message.report_id == report_id).delete(synchronize_session=False)
+    db.query(StatusLog).filter(StatusLog.report_id == report_id).delete(synchronize_session=False)
+    db.delete(report)
+    db.commit()
+    return Response(status_code=204)
 
 
 @router.get("/reports/{report_id}", response_model=ReportDetailOut)

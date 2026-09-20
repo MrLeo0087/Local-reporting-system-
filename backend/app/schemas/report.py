@@ -2,9 +2,10 @@ import uuid
 from datetime import datetime, date
 from typing import Optional
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, model_validator
 
 from app.models.report import REJECTION_REASONS
+from app.models.staff import STAFF_CATEGORIES
 
 
 class StatusLogOut(BaseModel):
@@ -67,6 +68,23 @@ class ProgressReportIn(BaseModel):
 
 class SimpleActionIn(BaseModel):
     comment: Optional[str] = None
+
+
+class ReportAdminOut(ReportStaffOut):
+    """Admin management view — same fields staff see, for the admin's report-editing table."""
+
+
+class ReportAdminUpdate(BaseModel):
+    category: Optional[str] = None
+    ward_no: Optional[int] = None
+    landmark: Optional[str] = Field(default=None, min_length=1, max_length=200)
+    description: Optional[str] = Field(default=None, min_length=1)
+
+    @model_validator(mode="after")
+    def validate_category(self):
+        if self.category is not None and self.category not in STAFF_CATEGORIES:
+            raise ValueError(f"category must be one of {STAFF_CATEGORIES}")
+        return self
 
 
 class UnassignedReportOut(BaseModel):

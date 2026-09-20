@@ -8,7 +8,7 @@ from app.models.staff import Staff
 from app.models.citizen import Citizen
 from app.models.report import Report, REJECTION_REASONS
 from app.models.status_log import StatusLog
-from app.schemas.staff import StaffLogin
+from app.schemas.staff import StaffLogin, StaffOut
 from app.schemas.citizen import TokenOut
 from app.schemas.report import (
     ReportStaffOut,
@@ -17,7 +17,7 @@ from app.schemas.report import (
     SimpleActionIn,
 )
 from app.auth.security import verify_password, create_access_token
-from app.auth.dependencies import require_staff_only
+from app.auth.dependencies import require_staff_only, get_current_staff
 from app.utils.fake_report_lock import register_false_report
 
 router = APIRouter(prefix="/staff", tags=["staff"])
@@ -62,6 +62,11 @@ def login(payload: StaffLogin, db: Session = Depends(get_db)):
         }
     )
     return TokenOut(access_token=token, role=staff.role)
+
+
+@router.get("/me", response_model=StaffOut)
+def read_me(current_staff: Staff = Depends(get_current_staff)):
+    return current_staff
 
 
 def _get_report_for_staff(report_id: uuid.UUID, db: Session, staff: Staff) -> Report:
