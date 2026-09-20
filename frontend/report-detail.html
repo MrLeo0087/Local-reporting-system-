@@ -25,8 +25,8 @@
   E-Governance Laboratory Project — Tribhuvan University
 </footer>
 
-<script src="js/api.js?v=8"></script>
-<script src="js/auth.js?v=9"></script>
+<script src="js/api.js?v=9"></script>
+<script src="js/auth.js?v=10"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="js/map.js?v=2"></script>
 <script>
@@ -141,8 +141,11 @@
   async function loadMessages(reportId) {
     // Messages are private to the reporting citizen and the assigned staff —
     // whoever's logged in here, try with that token; a 401/403 just means
-    // this viewer isn't one of those two, so the card stays hidden.
-    const authKind = getToken("citizen") ? "citizen" : getToken("staff") ? "staff" : null;
+    // this viewer isn't one of those two, so the card stays hidden. Staff
+    // takes priority when both tokens are somehow present, matching the
+    // header nav's own priority (see renderCitizenHeader) — otherwise a
+    // leftover citizen token could silently hijack a staff member's messages.
+    const authKind = getToken("staff") ? "staff" : getToken("citizen") ? "citizen" : null;
     if (!authKind) return;
 
     const messagesCard = document.getElementById("messages-card");

@@ -31,6 +31,16 @@ function getToken(kind) {
 }
 
 function setToken(kind, token, role) {
+  // A citizen and a staff/admin session are mutually exclusive in this app's
+  // UI (the header nav, and pages like report-detail.html's message thread,
+  // only ever act as one or the other). Logging in as one role while a
+  // leftover token from the other still sits in localStorage — e.g. someone
+  // tested as a citizen earlier in the same browser, then logs in as staff —
+  // used to cause requests to silently authenticate as the stale role
+  // instead, misattributing sent messages. Clearing the other kind here
+  // guarantees at most one session is ever active at a time.
+  const otherKind = kind === "citizen" ? "staff" : "citizen";
+  clearToken(otherKind);
   localStorage.setItem(`${kind}_token`, token);
   if (role) localStorage.setItem(`${kind}_role`, role);
 }

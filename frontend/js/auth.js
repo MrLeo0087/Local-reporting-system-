@@ -60,7 +60,8 @@ function renderCitizenHeader(activePage) {
   const logoutBtn = nav.querySelector("[data-logout-btn]");
   if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
-      clearToken(staffToken ? "staff" : "citizen");
+      clearToken("staff");
+      clearToken("citizen");
       window.location.href = "index.html";
     });
   }
