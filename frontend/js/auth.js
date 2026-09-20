@@ -25,7 +25,7 @@ function renderCitizenHeader(activePage) {
     links.push(
       staffRole === "admin"
         ? { href: "admin-dashboard.html", label: "Admin Dashboard" }
-        : { href: "staff-dashboard.html", label: "Staff Dashboard" }
+        : { href: "staff-dashboard.html", label: "Department Dashboard" }
     );
   } else if (citizenToken) {
     links.push({ href: "submit-report.html", label: "Report a Problem" });
@@ -47,7 +47,7 @@ function renderCitizenHeader(activePage) {
     html += `<button type="button" data-logout-btn>Log out</button>`;
   }
   if (!staffToken) {
-    html += `<a href="staff-login.html">Staff Login</a>`;
+    html += `<a href="staff-login.html">Department Login</a>`;
   }
   html += `<button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode"></button>`;
 
@@ -90,7 +90,7 @@ async function renderWhoAmI() {
   try {
     if (staffToken) {
       const me = await apiFetch("/staff/me", { authKind: "staff" });
-      el.textContent = `Logged in as ${me.full_name} (${me.role === "admin" ? "Admin" : "Staff"})`;
+      el.textContent = `Logged in as ${me.full_name} (${me.role === "admin" ? "Admin" : "Department"})`;
     } else {
       const me = await apiFetch("/citizens/me", { authKind: "citizen" });
       el.textContent = `Logged in as ${me.full_name}`;

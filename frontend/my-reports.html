@@ -86,7 +86,7 @@
 </footer>
 
 <script src="js/api.js?v=9"></script>
-<script src="js/auth.js?v=10"></script>
+<script src="js/auth.js?v=11"></script>
 <script>
   requireCitizenLogin();
   renderCitizenHeader("my-reports.html");
@@ -131,7 +131,7 @@
                 <button type="button" class="btn small secondary" data-report-edit="${r.id}">✏️ Edit</button>
                 <button type="button" class="btn small reject" data-report-delete="${r.id}">🗑️ Delete</button>
               </div>`
-            : `<p class="helper-text">This report has been reviewed by staff and can no longer be edited or deleted.</p>`
+            : `<p class="helper-text">This report has been reviewed by the department and can no longer be edited or deleted.</p>`
           }
         </div>
       </div>

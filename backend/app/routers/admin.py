@@ -26,7 +26,7 @@ def create_staff(
 ):
     existing = db.query(Staff).filter(Staff.email == payload.email).first()
     if existing:
-        raise HTTPException(status_code=400, detail="A staff account with this email already exists.")
+        raise HTTPException(status_code=400, detail="A department account with this email already exists.")
 
     staff = Staff(
         full_name=payload.full_name,
@@ -58,7 +58,7 @@ def disable_staff(
 
     staff = db.query(Staff).filter(Staff.id == staff_id).first()
     if not staff:
-        raise HTTPException(status_code=404, detail="Staff account not found.")
+        raise HTTPException(status_code=404, detail="Department account not found.")
 
     # A "remove" here means disable rather than delete: status_logs.staff_id
     # references this row for every action they've ever taken, so a real
@@ -79,7 +79,7 @@ def enable_staff(
 ):
     staff = db.query(Staff).filter(Staff.id == staff_id).first()
     if not staff:
-        raise HTTPException(status_code=404, detail="Staff account not found.")
+        raise HTTPException(status_code=404, detail="Department account not found.")
 
     staff.disabled = False
     db.add(staff)
@@ -97,12 +97,12 @@ def update_staff(
 ):
     staff = db.query(Staff).filter(Staff.id == staff_id).first()
     if not staff:
-        raise HTTPException(status_code=404, detail="Staff account not found.")
+        raise HTTPException(status_code=404, detail="Department account not found.")
 
     if payload.email is not None and payload.email != staff.email:
         existing = db.query(Staff).filter(Staff.email == payload.email).first()
         if existing:
-            raise HTTPException(status_code=400, detail="A staff account with this email already exists.")
+            raise HTTPException(status_code=400, detail="A department account with this email already exists.")
         staff.email = payload.email
 
     if payload.full_name is not None:
@@ -138,7 +138,7 @@ def delete_staff(
 
     staff = db.query(Staff).filter(Staff.id == staff_id).first()
     if not staff:
-        raise HTTPException(status_code=404, detail="Staff account not found.")
+        raise HTTPException(status_code=404, detail="Department account not found.")
 
     # Detach this staff member from their past actions rather than deleting
     # those status_log rows too, so the report history stays intact even

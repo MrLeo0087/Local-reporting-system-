@@ -24,7 +24,7 @@
     <div class="admin-hero-icon">🛡️</div>
     <div>
       <h1>Admin Dashboard</h1>
-      <p class="subtitle">Create staff accounts, manage citizens, and keep every ward covered.</p>
+      <p class="subtitle">Create department accounts, manage citizens, and keep every ward covered.</p>
     </div>
   </div>
 
@@ -34,7 +34,7 @@
   <div id="stats-row" class="stats-row"></div>
 
   <div class="card section-card accent-blue reveal">
-    <h3><span class="section-icon">➕</span>Create a New Staff Account</h3>
+    <h3><span class="section-icon">➕</span>Create a New Department Account</h3>
     <form id="staff-form">
       <label for="full_name">Full name</label>
       <input type="text" id="full_name" required maxlength="150" />
@@ -50,7 +50,7 @@
 
       <label for="role">Role</label>
       <select id="role">
-        <option value="staff">Staff</option>
+        <option value="staff">Department</option>
         <option value="admin">Admin</option>
       </select>
 
@@ -62,13 +62,13 @@
         <input type="number" id="ward_no" min="1" />
       </div>
 
-      <button type="submit" class="btn">✨ Create Staff Account</button>
+      <button type="submit" class="btn">✨ Create Department Account</button>
     </form>
   </div>
 
   <div id="staff-edit-modal" class="modal-overlay" style="display:none;">
     <div class="modal-box card">
-      <h3><span class="section-icon">✏️</span>Edit Staff Account</h3>
+      <h3><span class="section-icon">✏️</span>Edit Department Account</h3>
       <form id="staff-edit-form">
         <input type="hidden" id="edit_staff_id" />
 
@@ -86,7 +86,7 @@
 
         <label for="edit_role">Role</label>
         <select id="edit_role">
-          <option value="staff">Staff</option>
+          <option value="staff">Department</option>
           <option value="admin">Admin</option>
         </select>
 
@@ -107,7 +107,7 @@
   </div>
 
   <div class="card section-card accent-purple reveal">
-    <h3><span class="section-icon">👮</span>Existing Staff Accounts</h3>
+    <h3><span class="section-icon">🏢</span>Existing Department Accounts</h3>
     <table class="data-table" id="staff-table">
       <thead>
         <tr><th>Name</th><th>Email</th><th>Role</th><th>Category</th><th>Ward</th><th>Created</th><th>Status</th><th></th></tr>
@@ -160,11 +160,11 @@
   </div>
 
   <div class="card section-card accent-orange reveal">
-    <h3><span class="section-icon">⚠️</span>Reports With No Staff Coverage</h3>
+    <h3><span class="section-icon">⚠️</span>Reports With No Department Coverage</h3>
     <p class="helper-text">
-      These reports' category + ward has no active staff assigned, so they're
-      invisible in every staff dashboard. Create a matching staff account
-      above to fix each one.
+      These reports' category + ward has no active department assigned, so
+      they're invisible in every department dashboard. Create a matching
+      department account above to fix each one.
     </p>
     <table class="data-table" id="unassigned-table">
       <thead>
@@ -220,7 +220,7 @@
 </footer>
 
 <script src="js/api.js?v=9"></script>
-<script src="js/auth.js?v=10"></script>
+<script src="js/auth.js?v=11"></script>
 <script>
   requireAdminLogin();
   renderWhoAmI();
@@ -254,7 +254,7 @@
 
   function renderStats() {
     statsEl.innerHTML = `
-      <div class="stat-pill accent-blue"><span class="stat-icon">👮</span><div><span class="stat-num">${lastCounts.staff}</span><span class="stat-label">Staff Accounts</span></div></div>
+      <div class="stat-pill accent-blue"><span class="stat-icon">🏢</span><div><span class="stat-num">${lastCounts.staff}</span><span class="stat-label">Department Accounts</span></div></div>
       <div class="stat-pill accent-green"><span class="stat-icon">🧑‍🤝‍🧑</span><div><span class="stat-num">${lastCounts.citizens}</span><span class="stat-label">Citizens</span></div></div>
       <div class="stat-pill accent-orange"><span class="stat-icon">⚠️</span><div><span class="stat-num">${lastCounts.unassigned}</span><span class="stat-label">Uncovered Reports</span></div></div>
     `;
@@ -282,7 +282,7 @@
       lastCounts.staff = staffList.length;
       renderStats();
       if (staffList.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="8">No staff accounts yet.</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="8">No department accounts yet.</td></tr>`;
         return;
       }
       tableBody.innerHTML = staffList
@@ -291,7 +291,7 @@
         <tr>
           <td>${escapeHtml(s.full_name)}</td>
           <td>${escapeHtml(s.email)}</td>
-          <td><span class="role-chip ${s.role}">${s.role === "admin" ? "🛡️ Admin" : "👮 Staff"}</span></td>
+          <td><span class="role-chip ${s.role}">${s.role === "admin" ? "🛡️ Admin" : "🏢 Department"}</span></td>
           <td>${s.category ? categoryLabel(s.category) : "—"}</td>
           <td>${s.ward_no ?? "—"}</td>
           <td>${formatDate(s.created_at)}</td>
@@ -391,7 +391,7 @@
     try {
       await apiFetch(`/admin/staff/${id}`, { method: "PATCH", body, authKind: "staff" });
       closeEditStaffModal();
-      showBox(successEl, "Staff account updated.");
+      showBox(successEl, "Department account updated.");
       loadStaff();
       loadUnassigned();
     } catch (err) {
@@ -403,7 +403,7 @@
 
   async function deleteStaff(btn) {
     const id = btn.dataset.staffDelete;
-    if (!confirm("Permanently delete this staff account? This cannot be undone — the account itself is gone for good, though their past actions stay in the report history.")) {
+    if (!confirm("Permanently delete this department account? This cannot be undone — the account itself is gone for good, though their past actions stay in the report history.")) {
       return;
     }
     showBox(errorEl, "");
@@ -411,7 +411,7 @@
     setButtonLoading(btn, true);
     try {
       await apiFetch(`/admin/staff/${id}`, { method: "DELETE", authKind: "staff" });
-      showBox(successEl, "Staff account permanently deleted.");
+      showBox(successEl, "Department account permanently deleted.");
       loadStaff();
       loadUnassigned();
     } catch (err) {
@@ -424,7 +424,7 @@
     const id = btn.dataset.staffToggle;
     const isDisabled = btn.dataset.disabled === "true";
     const action = isDisabled ? "enable" : "disable";
-    if (!isDisabled && !confirm("Remove this staff member? They will no longer be able to log in. This can be undone later.")) {
+    if (!isDisabled && !confirm("Remove this department account? They will no longer be able to log in. This can be undone later.")) {
       return;
     }
     showBox(errorEl, "");
@@ -432,7 +432,7 @@
     setButtonLoading(btn, true);
     try {
       await apiFetch(`/admin/staff/${id}/${action}`, { method: "PATCH", authKind: "staff" });
-      showBox(successEl, `Staff account ${action === "disable" ? "removed" : "re-enabled"}.`);
+      showBox(successEl, `Department account ${action === "disable" ? "removed" : "re-enabled"}.`);
       loadStaff();
       loadUnassigned();
     } catch (err) {
@@ -613,7 +613,7 @@
       lastCounts.unassigned = reports.length;
       renderStats();
       if (reports.length === 0) {
-        unassignedTableBody.innerHTML = `<tr><td colspan="5">None — every report has a matching staff member. 🎉</td></tr>`;
+        unassignedTableBody.innerHTML = `<tr><td colspan="5">None — every report has a matching department. 🎉</td></tr>`;
         return;
       }
       unassignedTableBody.innerHTML = reports
@@ -779,7 +779,7 @@
 
     try {
       await apiFetch("/admin/staff", { method: "POST", body, authKind: "staff" });
-      showBox(successEl, "Staff account created.");
+      showBox(successEl, "Department account created.");
       form.reset();
       staffOnlyFields.style.display = "block";
       loadStaff();

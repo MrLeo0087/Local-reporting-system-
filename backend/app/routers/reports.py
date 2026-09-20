@@ -177,7 +177,7 @@ def update_my_report(
     if report.status != "submitted":
         raise HTTPException(
             status_code=400,
-            detail="This report has already been reviewed by staff and can no longer be edited.",
+            detail="This report has already been reviewed by the department and can no longer be edited.",
         )
 
     if payload.category is not None:
@@ -208,7 +208,7 @@ def delete_my_report(
     if report.status != "submitted":
         raise HTTPException(
             status_code=400,
-            detail="This report has already been reviewed by staff and can no longer be deleted.",
+            detail="This report has already been reviewed by the department and can no longer be deleted.",
         )
 
     db.query(Message).filter(Message.report_id == report_id).delete(synchronize_session=False)

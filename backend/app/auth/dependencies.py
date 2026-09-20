@@ -85,7 +85,7 @@ def require_staff_only(staff: Staff = Depends(get_current_staff)) -> Staff:
     if staff.role != "staff":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="This action is for department staff only, not admins.",
+            detail="This action is for department accounts only, not admins.",
         )
     return staff
 

@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <script>(function(){var t=localStorage.getItem("theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Staff Dashboard — Local Civic Problem Reporting System</title>
+<title>Department Dashboard — Local Civic Problem Reporting System</title>
 <link rel="stylesheet" href="css/style.css?v=10" />
 </head>
 <body>
@@ -20,7 +20,7 @@
 </header>
 
 <main class="wide">
-  <h1>Staff Dashboard</h1>
+  <h1>Department Dashboard</h1>
   <p class="subtitle">Showing reports in your assigned category and ward.</p>
 
   <div id="error-box" class="error-box"></div>
@@ -35,7 +35,7 @@
 </footer>
 
 <script src="js/api.js?v=9"></script>
-<script src="js/auth.js?v=10"></script>
+<script src="js/auth.js?v=11"></script>
 <script>
   requireStaffOnlyLogin();
   renderWhoAmI();
